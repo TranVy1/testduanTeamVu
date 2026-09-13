@@ -71,11 +71,25 @@ public class KhachHangService {
         KhachHang khachHang = khachHangRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Khách hàng không tồn tại!"));
 
-        khachHang.setHoTen(hoTen);
-        khachHang.setEmail(email);
-        khachHang.setSoDienThoai(soDienThoai);
-        khachHang.setDiaChi(diaChi);
+        if (hoTen == null || !com.web.app.util.ValidationUtil.isValidFullName(hoTen)) {
+            throw new IllegalArgumentException("Họ tên không hợp lệ! Vui lòng nhập từ 2 ký tự và không chứa số/ký tự đặc biệt.");
+        }
+        if (soDienThoai != null && !soDienThoai.isBlank() && !com.web.app.util.ValidationUtil.isValidPhone(soDienThoai)) {
+            throw new IllegalArgumentException("Số điện thoại không hợp lệ! Vui lòng nhập đúng 10 số (bắt đầu bằng 03, 05, 07, 08, 09).");
+        }
+        if (email != null && !email.isBlank() && !com.web.app.util.ValidationUtil.isValidEmail(email)) {
+            throw new IllegalArgumentException("Địa chỉ email không đúng định dạng!");
+        }
+        if (diaChi != null && !diaChi.isBlank() && !com.web.app.util.ValidationUtil.isValidAddress(diaChi)) {
+            throw new IllegalArgumentException("Địa chỉ quá ngắn! Vui lòng nhập địa chỉ cụ thể từ 8 ký tự trở lên.");
+        }
+
+        khachHang.setHoTen(hoTen.trim());
+        khachHang.setEmail(email != null ? email.trim() : null);
+        khachHang.setSoDienThoai(soDienThoai != null ? soDienThoai.trim() : null);
+        khachHang.setDiaChi(diaChi != null ? diaChi.trim() : null);
 
         return khachHangRepository.save(khachHang);
     }
 }
+

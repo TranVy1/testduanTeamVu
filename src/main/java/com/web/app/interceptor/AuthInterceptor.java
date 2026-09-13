@@ -30,6 +30,10 @@ public class AuthInterceptor implements HandlerInterceptor {
         // 2. Customer protected paths (cart, checkout, profile, orders)
         if (uri.startsWith("/cart") || uri.startsWith("/checkout") || uri.startsWith("/profile") || uri.startsWith("/orders")) {
             if (session.getAttribute("user") == null) {
+                if (session.getAttribute("admin") != null) {
+                    response.sendRedirect("/admin/dashboard");
+                    return false;
+                }
                 response.sendRedirect("/login?error=login-required&redirect=" + uri);
                 return false;
             }

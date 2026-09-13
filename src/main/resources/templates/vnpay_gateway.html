@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng thanh toán điện tử VNPAY</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        :root {
+            --vnpay-blue: #005baa;
+            --vnpay-red: #ed1c24;
+            --vnpay-bg: #f5f7fa;
+        }
+        body {
+            background-color: var(--vnpay-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #2c3e50;
+        }
+        .vnpay-header {
+            background: #fff;
+            border-bottom: 2px solid #e9ecef;
+            padding: 14px 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .vnpay-logo {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .vnpay-logo .vn { color: var(--vnpay-blue); }
+        .vnpay-logo .pay { color: var(--vnpay-red); }
+        .vnpay-security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #198754;
+            font-size: 13px;
+            font-weight: 500;
+            background: #e8f5e9;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .payment-container {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+        .card-custom {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+        }
+        .bank-item {
+            border: 1.5px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            user-select: none;
+        }
+        .bank-item.active {
+            border-color: var(--vnpay-blue);
+            color: var(--vnpay-blue);
+            background: #f0f7fd;
+            box-shadow: 0 0 0 1px var(--vnpay-blue);
+        }
+        .btn-vnpay-pay {
+            background: var(--vnpay-blue);
+            color: #fff;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            transition: background 0.2s;
+        }
+        .btn-vnpay-pay:hover {
+            background: #004d91;
+            color: #fff;
+        }
+        .order-summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e9ecef;
+            font-size: 14px;
+        }
+        .order-summary-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="vnpay-header mb-4">
+        <div class="container payment-container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <a href="#" class="vnpay-logo">
+                    <span class="vn">VN</span><span class="pay">PAY</span>
+                </a>
+                <span class="vnpay-security-badge">
+                    <i class="fa-solid fa-lock"></i> PCI DSS Certified
+                </span>
+            </div>
+            <div class="text-end">
+                <div class="text-muted small">Đơn vị chấp nhận thanh toán</div>
+                <strong class="text-dark">HATS.VN CO., LTD</strong>
+            </div>
+        </div>
+    </header>
+
+    <!-- Payment Main -->
+    <main class="container payment-container pb-5">
+        <div class="row g-4">
+            
+            <!-- Payment Form -->
+            <div class="col-lg-7">
+                <div class="card card-custom p-4">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center">
+                        <i class="fa-solid fa-credit-card text-primary me-2"></i>Thẻ ATM / Tài khoản ngân hàng
+                    </h5>
+
+                    <!-- Order Summary -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-bold" style="background: #fef2f2; border: 1px solid #fee2e2;">
+                            <i class="fa-solid fa-clock me-1"></i>Hết hạn trong: <span id="vnpayTimer" class="font-monospace">14:59</span>
+                        </span>
+                    </div>
+
+                    <!-- Payment Methods Tab -->
+                    <ul class="nav nav-pills nav-fill mb-3 p-1 bg-light rounded-3" id="vnpayTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold text-dark" id="tab-atm-btn" data-bs-toggle="pill" data-bs-target="#tab-atm" type="button" role="tab">
+                                <i class="fa-solid fa-credit-card text-primary me-1"></i>Thẻ ATM / Ngân hàng
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold text-dark" id="tab-qr-btn" data-bs-toggle="pill" data-bs-target="#tab-qr" type="button" role="tab">
+                                <i class="fa-solid fa-qrcode text-danger me-1"></i>VNPAY-QR
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="vnpayTabContent">
+                        <!-- ATM Card Tab -->
+                        <div class="tab-pane fade show active" id="tab-atm" role="tabpanel">
+                            <!-- Bank Selection -->
+                            <label class="form-label small text-muted fw-bold">Chọn ngân hàng phát hành thẻ:</label>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4">
+                                    <div class="bank-item active" data-bank="NCB">
+                                        <i class="fa-solid fa-building-columns text-primary"></i>
+                                        <span>NCB Bank</span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="bank-item" data-bank="VCB">
+                                        <i class="fa-solid fa-building-columns text-success"></i>
+                                        <span>Vietcombank</span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="bank-item" data-bank="TCB">
+                                        <i class="fa-solid fa-building-columns text-danger"></i>
+                                        <span>Techcombank</span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="bank-item" data-bank="MB">
+                                        <i class="fa-solid fa-building-columns text-primary"></i>
+                                        <span>MBBank</span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="bank-item" data-bank="BIDV">
+                                        <i class="fa-solid fa-building-columns text-success"></i>
+                                        <span>BIDV</span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="bank-item" data-bank="VPB">
+                                        <i class="fa-solid fa-building-columns text-success"></i>
+                                        <span>VPBank</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form th:action="@{/payment/vnpay/{id}/process(id=${order.id})}" method="post" id="vnpayForm">
+                                <input type="hidden" name="bankCode" id="selectedBankCode" value="NCB">
+
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="cardNumber" class="form-label small text-muted fw-bold mb-0">Số thẻ ATM nội địa</label>
+                                        <a href="javascript:void(0)" id="btnFillCard" class="badge bg-primary text-white text-decoration-none py-1 px-2" style="font-size: 11px;">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Điền nhanh thẻ mẫu NCB
+                                        </a>
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="fa-regular fa-credit-card text-muted"></i></span>
+                                        <input type="text" class="form-control font-monospace" name="cardNumber" id="cardNumber" required placeholder="9704 1985 2619 1432 198" value="9704 1985 2619 1432 198" maxlength="23">
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-7">
+                                        <label for="cardHolder" class="form-label small text-muted fw-bold">Tên in trên thẻ (không dấu)</label>
+                                        <input type="text" class="form-control text-uppercase" name="cardHolder" id="cardHolder" required placeholder="NGUYEN VAN A" value="NGUYEN VAN A">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label for="issueDate" class="form-label small text-muted fw-bold">Ngày phát hành</label>
+                                        <input type="text" class="form-control font-monospace" name="issueDate" id="issueDate" placeholder="07/15" value="07/15" maxlength="5">
+                                    </div>
+                                </div>
+
+                                <input type="hidden" name="otp" id="hiddenOtp" value="123456">
+
+                                <button type="submit" class="btn btn-vnpay-pay w-100" id="btnSubmit">
+                                    <i class="fa-solid fa-shield-check me-2"></i>Thanh toán <span th:text="${#numbers.formatDecimal(order.tongTien, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
+                                </button>
+                                
+                                <div class="text-center mt-3">
+                                    <a th:href="@{/orders/{id}(id=${order.id})}" class="text-muted text-decoration-none small">
+                                        <i class="fa-solid fa-arrow-left me-1"></i>Quay lại đơn hàng
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- VNPAY-QR Tab -->
+                        <div class="tab-pane fade text-center py-3" id="tab-qr" role="tabpanel">
+                            <p class="small text-muted mb-2">Mở ứng dụng Ngân hàng (VCB, VietinBank, BIDV, MB...) hoặc ví VNPAY để quét mã</p>
+                            <div class="p-3 bg-white border rounded-3 d-inline-block shadow-sm mb-3">
+                                <img th:src="@{'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=00020101021226580010A000000727012600069704220112109876543210208QRIBFTTA520460115303704540' + ${#numbers.formatDecimal(order.tongTien, 0, 'POINT', 0, 'POINT')} + '5802VN62100806DH' + ${order.id} + '6304'}"
+                                     alt="VNPAY QR" class="img-fluid" style="width: 210px; height: 210px;">
+                            </div>
+                            <div class="small fw-semibold text-primary mb-3">
+                                <i class="fa-solid fa-arrows-rotate fa-spin me-1"></i>Hệ thống tự động nhận diện thanh toán...
+                            </div>
+                            <form th:action="@{/payment/vnpay/{id}/process(id=${order.id})}" method="post">
+                                <input type="hidden" name="bankCode" value="VNPAYQR">
+                                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold px-4 py-2">
+                                    <i class="fa-solid fa-circle-check me-1"></i>Xác nhận giao dịch VNPAY-QR
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-5">
+                <div class="card card-custom p-4">
+                    <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Thông tin giao dịch</h6>
+                    
+                    <div class="order-summary-item">
+                        <span class="text-muted">Mã đơn hàng:</span>
+                        <strong class="text-dark" th:text="'#' + ${order.id}">#0</strong>
+                    </div>
+                    <div class="order-summary-item">
+                        <span class="text-muted">Khách hàng:</span>
+                        <strong class="text-dark" th:text="${order.hoTenNhan}">Khách hàng</strong>
+                    </div>
+                    <div class="order-summary-item">
+                        <span class="text-muted">Số điện thoại:</span>
+                        <span th:text="${order.soDienThoaiNhan}">0987654321</span>
+                    </div>
+                    <div class="order-summary-item">
+                        <span class="text-muted">Thời gian khởi tạo:</span>
+                        <span th:text="${#temporals.format(order.ngayDat, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                    <div class="order-summary-item">
+                        <span class="text-muted">Cổng kết nối:</span>
+                        <span class="text-primary fw-semibold">VNPAY Payment Gateway (Nội địa)</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 mt-2 border-top">
+                        <span class="fw-bold">Số tiền thanh toán:</span>
+                        <span class="fs-4 fw-bold text-danger" th:text="${#numbers.formatDecimal(order.tongTien, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 mt-4 text-muted small border">
+                        <div class="d-flex gap-2">
+                            <i class="fa-solid fa-shield-halved text-success mt-1"></i>
+                            <div>Giao dịch được bảo vệ bằng công nghệ mã hóa TLS 1.3 và đạt chứng nhận bảo mật quốc tế PCI-DSS cấp độ cao nhất.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Countdown timer 15 mins
+        let timeLeft = 15 * 60;
+        const timerEl = document.getElementById('vnpayTimer');
+        const countdownInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                timerEl.textContent = '00:00';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Giao dịch hết hạn',
+                    text: 'Phiên thanh toán đã hết hạn. Vui lòng quay lại đơn hàng để thử lại.',
+                    confirmButtonText: 'Quay lại',
+                }).then(() => {
+                    window.location.href = '/orders/' + '[[${order.id}]]';
+                });
+            } else {
+                const mins = Math.floor(timeLeft / 60);
+                const secs = timeLeft % 60;
+                timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
+
+        // Bank selection
+        document.querySelectorAll('.bank-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.bank-item').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('selectedBankCode').value = this.getAttribute('data-bank');
+            });
+        });
+
+        // Auto format card number with spaces
+        const cardInput = document.getElementById('cardNumber');
+        if (cardInput) {
+            cardInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                let formatted = value.match(/.{1,4}/g)?.join(' ') || value;
+                e.target.value = formatted.substring(0, 23);
+            });
+        }
+
+        // Autofill sample NCB card
+        document.getElementById('btnFillCard')?.addEventListener('click', function() {
+            document.getElementById('cardNumber').value = '9704 1985 2619 1432 198';
+            document.getElementById('cardHolder').value = 'NGUYEN VAN A';
+            document.getElementById('issueDate').value = '07/15';
+        });
+
+        // Submit form with OTP modal verification
+        document.getElementById('vnpayForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const bankCode = document.getElementById('selectedBankCode').value;
+
+            Swal.fire({
+                title: 'Xác thực OTP Ngân hàng ' + bankCode,
+                html: `
+                    <div class="text-start small text-muted mb-3">
+                        Mã xác thực một lần (OTP) đã được gửi qua tin nhắn SMS tới số điện thoại liên kết thẻ <strong>098***4321</strong>.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-start d-block">Nhập mã OTP (6 số):</label>
+                        <input type="text" id="swalOtp" class="form-control text-center font-monospace fs-4 fw-bold" maxlength="6" value="123456" autofocus>
+                    </div>
+                    <div class="small text-muted d-flex justify-content-between align-items-center">
+                        <span>Mã xác thực SMS OTP mặc định: <b>123456</b></span>
+                        <span class="text-primary"><i class="fa-solid fa-clock me-1"></i>Hết hạn sau 59s</span>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-lock me-1"></i>Xác nhận thanh toán',
+                cancelButtonText: 'Hủy bỏ',
+                confirmButtonColor: '#005baa',
+                cancelButtonColor: '#6c757d',
+                allowOutsideClick: false,
+                preConfirm: () => {
+                    const otpVal = document.getElementById('swalOtp').value.trim();
+                    if (!otpVal || otpVal.length < 6) {
+                        Swal.showValidationMessage('Vui lòng nhập đầy đủ mã OTP 6 chữ số!');
+                        return false;
+                    }
+                    document.getElementById('hiddenOtp').value = otpVal;
+                    return true;
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    Swal.fire({
+                        title: 'Đang xử lý giao dịch...',
+                        html: '<div class="text-muted small mt-2">Đang kết nối trung tâm chuyển mạch tài chính quốc gia Napas & Ngân hàng.<br>Vui lòng không đóng trình duyệt.</div>',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                            setTimeout(() => {
+                                form.submit();
+                            }, 1200);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

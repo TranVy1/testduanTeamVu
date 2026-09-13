@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: html_head('Tư vấn & Chăm sóc Khách hàng')}"></head>
+<body class="admin-dashboard d-flex flex-column min-vh-100">
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<main class="dashboard-shell container-fluid flex-grow-1 d-flex flex-column" style="padding-bottom: 24px;">
+  <!-- Admin Tabs -->
+  <nav class="admin-tabs" aria-label="Điều hướng quản trị">
+    <a th:href="@{/admin/dashboard}" class="admin-tab"><i class="fa-solid fa-chart-line"></i><span>Tổng quan</span></a>
+    <a th:href="@{/admin/products}" class="admin-tab"><i class="fa-solid fa-hat-cowboy"></i><span>Sản phẩm</span></a>
+    <a th:href="@{/admin/categories}" class="admin-tab"><i class="fa-solid fa-layer-group"></i><span>Danh mục</span></a>
+    <a th:href="@{/admin/brands}" class="admin-tab"><i class="fa-regular fa-copyright"></i><span>Thương hiệu</span></a>
+    <a th:href="@{/admin/orders}" class="admin-tab"><i class="fa-solid fa-receipt"></i><span>Đơn hàng</span></a>
+    <a th:href="@{/admin/customers}" class="admin-tab"><i class="fa-regular fa-user"></i><span>Khách hàng</span></a>
+    <a th:href="@{/admin/coupons}" class="admin-tab"><i class="fa-solid fa-ticket"></i><span>Mã giảm giá</span></a>
+    <a th:href="@{/admin/chat}" class="admin-tab active" aria-current="page"><i class="fa-solid fa-comments"></i><span>Tư vấn khách</span></a>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+      <h1 style="font-size: 22px; font-weight: 800; margin-bottom: 4px; color: var(--dash-text);">
+        <i class="fa-solid fa-headset" style="color: #a78bfa; margin-right: 8px;"></i>Tư vấn & Trao đổi Khách hàng trực tuyến
+      </h1>
+      <p style="color: var(--dash-muted); font-size: 13px; margin: 0;">
+        Hỗ trợ trực tiếp khách hàng mua sắm, giải đáp thắc mắc về size mũ, vận chuyển và bảo hành.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill" id="wsStatusBadge" style="font-weight: 600; font-size: 12px;">
+        <i class="fa-solid fa-circle text-success me-1" style="font-size: 8px;"></i> WebSocket: Đang kết nối...
+      </span>
+      <button onclick="loadConversations()" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="Tải lại danh sách">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat Container -->
+  <div class="card border-0 shadow-sm rounded-4 flex-grow-1 overflow-hidden" style="min-height: 600px; display: flex; flex-direction: row; background: var(--dash-surface); border: 1px solid var(--dash-border) !important;">
+    <div class="row g-0 flex-grow-1" style="margin: 0; width: 100%;">
+      
+      <!-- LEFT PANEL: Conversation List -->
+      <div class="col-md-4 col-lg-3 border-end d-flex flex-column" style="background: var(--dash-surface); border-color: var(--dash-border) !important;">
+        <!-- Search & Filter -->
+        <div class="p-3 border-bottom" style="border-color: var(--dash-border) !important;">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text border-0" style="background: var(--dash-surface-2); color: #94a3b8;"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" id="searchInput" class="form-control border-0" placeholder="Tìm tên, số điện thoại..." oninput="filterConversations()" style="background: var(--dash-surface-2); color: #f1f1f5; font-size: 13px;">
+          </div>
+        </div>
+
+        <!-- Conversations List -->
+        <div id="conversationList" class="flex-grow-1 overflow-y-auto" style="max-height: 580px;">
+          <div class="text-center py-5" style="color: #94a3b8;">
+            <i class="fa-solid fa-spinner fa-spin fa-2x mb-2"></i>
+            <div>Đang tải hội thoại...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL: Chat Message Area -->
+      <div class="col-md-8 col-lg-9 d-flex flex-column" style="background: #101017;" id="chatMainArea">
+        
+        <!-- Empty State When No Chat Selected -->
+        <div id="noChatSelected" class="d-flex flex-column align-items-center justify-content-center flex-grow-1 text-center p-5">
+          <div style="width: 80px; height: 80px; background: rgba(124, 58, 237, 0.15); border: 1px solid rgba(167, 139, 250, 0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+            <i class="fa-solid fa-comments text-primary" style="font-size: 36px; color: #a78bfa !important;"></i>
+          </div>
+          <h4 style="font-weight: 700; color: #f1f1f5; margin-bottom: 8px;">Chọn một cuộc trò chuyện</h4>
+          <p style="color: #cbd5e1; max-width: 420px; font-size: 14px;">
+            Chọn khách hàng từ danh sách bên trái để xem nội dung trao đổi, tư vấn size mũ và hỗ trợ đơn hàng.
+          </p>
+        </div>
+
+        <!-- Chat Active View (Hidden by default) -->
+        <div id="chatActiveView" class="d-flex flex-column flex-grow-1" style="display: none !important;">
+          <!-- Chat Header -->
+          <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="background: var(--dash-surface); border-color: var(--dash-border) !important;">
+            <div class="d-flex align-items-center gap-3">
+              <div id="activeAvatar" style="width: 44px; height: 44px; border-radius: 50%; background: #7c3aed; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">
+                K
+              </div>
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <h6 class="mb-0" id="activeCustomerName" style="font-weight: 700; font-size: 16px; color: #f1f1f5;">Tên khách hàng</h6>
+                  <span id="activeCustomerBadge" class="badge bg-primary-subtle text-primary rounded-pill px-2" style="font-size: 11px;">Thành viên</span>
+                </div>
+                <div style="font-size: 12px; color: #cbd5e1 !important; margin-top: 2px;" id="activeCustomerInfo">
+                  SĐT: 0988888888 • Email: khach@gmail.com
+                </div>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="closeActiveChat()" title="Đóng hội thoại">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Response Chips -->
+          <div class="px-3 py-2 border-bottom d-flex gap-2 flex-wrap" style="background: var(--dash-surface-2); border-color: var(--dash-border) !important; font-size: 12px;">
+            <span class="align-self-center me-1" style="font-size: 11px; color: #cbd5e1 !important; font-weight: 600;"><i class="fa-solid fa-bolt text-warning"></i> Trả lời nhanh:</span>
+            <button class="btn btn-xs rounded-pill px-2 py-1" style="background: var(--dash-surface); border: 1px solid #3b3b50; color: #c4b5fd; font-size: 12px;" onclick="insertQuickReply('Dạ chào bạn! Shop có thể tư vấn mẫu mũ hay size mũ nào giúp bạn ạ?')">👋 Chào khách</button>
+            <button class="btn btn-xs rounded-pill px-2 py-1" style="background: var(--dash-surface); border: 1px solid #3b3b50; color: #c4b5fd; font-size: 12px;" onclick="insertQuickReply('Bạn cho shop xin số đo vòng đầu (cm) để tư vấn size chuẩn nhất nhé!')">📏 Xin số đo size</button>
+            <button class="btn btn-xs rounded-pill px-2 py-1" style="background: var(--dash-surface); border: 1px solid #3b3b50; color: #c4b5fd; font-size: 12px;" onclick="insertQuickReply('Dạ sản phẩm này đang có sẵn tại kho và được hỗ trợ miễn phí giao hàng toàn quốc ạ!')">🚚 Báo có sẵn & ship</button>
+            <button class="btn btn-xs rounded-pill px-2 py-1" style="background: var(--dash-surface); border: 1px solid #3b3b50; color: #c4b5fd; font-size: 12px;" onclick="insertQuickReply('Mũ được bảo hành chính hãng 24 tháng, đổi mới 7 ngày nếu không vừa size ạ!')">🛡️ Báo bảo hành</button>
+          </div>
+
+          <!-- Messages Scroll View -->
+          <div id="messagesArea" class="flex-grow-1 p-4 overflow-y-auto d-flex flex-column gap-3" style="max-height: 420px; background: #101017;">
+            <!-- Message bubbles inserted here -->
+          </div>
+
+          <!-- Input Footer -->
+          <div class="p-3 border-top" style="background: var(--dash-surface); border-color: var(--dash-border) !important;">
+            <form id="chatForm" onsubmit="handleAdminSend(event)" class="d-flex align-items-center gap-2">
+              <input type="text" id="adminMessageInput" class="form-control rounded-pill px-3 py-2" placeholder="Nhập câu trả lời tư vấn cho khách... (Enter để gửi)" autocomplete="off" required style="background: var(--dash-surface-2); border: 1px solid var(--dash-border); color: #f1f1f5; font-size: 13.5px;">
+              <button type="submit" class="btn btn-primary rounded-circle" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: #7c3aed; border-color: #8b5cf6;">
+                <i class="fa-solid fa-paper-plane" style="font-size: 14px;"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script>
+let stompClient = null;
+let conversations = [];
+let activeKey = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    connectWebSocket();
+    loadConversations();
+    setInterval(loadConversations, 6000); // Polling backup
+});
+
+function connectWebSocket() {
+    try {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null; // Quiet console
+        stompClient.connect({}, function (frame) {
+            const badge = document.getElementById('wsStatusBadge');
+            if (badge) {
+                badge.className = 'badge bg-success-subtle text-success px-3 py-2 rounded-pill';
+                badge.innerHTML = '<i class="fa-solid fa-circle text-success me-1" style="font-size: 8px;"></i> WebSocket: Trực tuyến';
+            }
+
+            // Subscribe to admin chat updates
+            stompClient.subscribe('/topic/admin/chat', function (msg) {
+                const messageData = JSON.parse(msg.body);
+                handleIncomingMessage(messageData);
+            });
+        }, function (error) {
+            const badge = document.getElementById('wsStatusBadge');
+            if (badge) {
+                badge.className = 'badge bg-warning-subtle text-warning px-3 py-2 rounded-pill';
+                badge.innerHTML = '<i class="fa-solid fa-circle text-warning me-1" style="font-size: 8px;"></i> Fallback Polling';
+            }
+            setTimeout(connectWebSocket, 5000);
+        });
+    } catch (e) {
+        console.warn('STOMP init failed:', e);
+    }
+}
+
+function handleIncomingMessage(msg) {
+    loadConversations();
+    // If message belongs to active thread, append it
+    const msgKey = msg.customerId ? ('C_' + msg.customerId) : ('G_' + msg.sessionGuestId);
+    if (activeKey === msgKey) {
+        appendMessageBubble(msg);
+        scrollToBottom();
+        // Mark as read
+        fetch(`/api/chat/admin/read?conversationKey=${encodeURIComponent(activeKey)}`, { method: 'POST' });
+    }
+}
+
+async function loadConversations() {
+    try {
+        const res = await fetch('/api/chat/admin/conversations');
+        if (res.ok) {
+            conversations = await res.json();
+            renderConversationList(conversations);
+        }
+    } catch (e) {
+        console.error('Error loading conversations:', e);
+    }
+}
+
+function renderConversationList(list) {
+    const container = document.getElementById('conversationList');
+    if (!container) return;
+
+    if (!list || list.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5 text-muted">
+                <i class="fa-regular fa-message fa-2x mb-2" style="color: #cbd5e1;"></i>
+                <div style="font-size: 13px;">Chưa có hội thoại nào</div>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    list.forEach(c => {
+        const isActive = c.conversationKey === activeKey;
+        const initial = (c.customerName || 'K').charAt(0).toUpperCase();
+        const unreadBadge = c.unreadCount > 0 
+            ? `<span class="badge bg-danger rounded-pill px-2 py-1" style="font-size: 11px;">${c.unreadCount}</span>` 
+            : '';
+
+        html += `
+            <div class="conversation-item p-3 border-bottom cursor-pointer" 
+                 onclick="selectConversation('${c.conversationKey}')"
+                 style="cursor: pointer; transition: background 0.15s; border-color: var(--dash-border) !important; ${isActive ? 'background: rgba(124, 58, 237, 0.28); border-left: 3px solid #a78bfa;' : ''}">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: ${c.customerId ? '#7c3aed' : '#475569'}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
+                        ${initial}
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="d-flex justify-content-between align-items-baseline mb-1">
+                            <span class="text-truncate fw-bold" style="font-size: 14px; color: #f8fafc; max-width: 140px;">
+                                ${escapeHtml(c.customerName)}
+                            </span>
+                            <span style="font-size: 11px; color: #94a3b8;">${c.lastTime || ''}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-truncate" style="font-size: 12.5px; color: #cbd5e1; max-width: 160px;">
+                                ${escapeHtml(c.lastMessage || '')}
+                            </span>
+                            ${unreadBadge}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function filterConversations() {
+    const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+    if (!query) {
+        renderConversationList(conversations);
+        return;
+    }
+    const filtered = conversations.filter(c => 
+        (c.customerName && c.customerName.toLowerCase().includes(query)) ||
+        (c.customerPhone && c.customerPhone.includes(query)) ||
+        (c.lastMessage && c.lastMessage.toLowerCase().includes(query))
+    );
+    renderConversationList(filtered);
+}
+
+async function selectConversation(key) {
+    activeKey = key;
+    renderConversationList(conversations); // update active highlight
+
+    const conv = conversations.find(c => c.conversationKey === key);
+    if (!conv) return;
+
+    // Show Chat Area
+    document.getElementById('noChatSelected').style.setProperty('display', 'none', 'important');
+    document.getElementById('chatActiveView').style.setProperty('display', 'flex', 'important');
+
+    // Update Header Info
+    document.getElementById('activeCustomerName').innerText = conv.customerName;
+    document.getElementById('activeAvatar').innerText = (conv.customerName || 'K').charAt(0).toUpperCase();
+    document.getElementById('activeCustomerBadge').innerText = conv.customerId ? 'Thành viên' : 'Khách vãng lai';
+    document.getElementById('activeCustomerBadge').className = conv.customerId 
+        ? 'badge bg-primary-subtle text-primary rounded-pill px-2' 
+        : 'badge bg-secondary-subtle text-secondary rounded-pill px-2';
+
+    let infoText = '';
+    if (conv.customerPhone) infoText += `SĐT: ${conv.customerPhone} `;
+    if (conv.customerEmail) infoText += `• Email: ${conv.customerEmail}`;
+    if (!infoText) infoText = `Mã phiên khách: ${conv.sessionGuestId || conv.conversationKey}`;
+    document.getElementById('activeCustomerInfo').innerText = infoText;
+
+    // Load messages
+    await loadMessages(key);
+
+    // Focus input
+    document.getElementById('adminMessageInput').focus();
+}
+
+async function loadMessages(key) {
+    const area = document.getElementById('messagesArea');
+    area.innerHTML = '<div class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải tin nhắn...</div>';
+    
+    try {
+        const res = await fetch(`/api/chat/admin/history?conversationKey=${encodeURIComponent(key)}`);
+        if (res.ok) {
+            const msgs = await res.json();
+            area.innerHTML = '';
+            msgs.forEach(m => appendMessageBubble(m));
+            scrollToBottom();
+            // Clear unread count locally
+            const c = conversations.find(x => x.conversationKey === key);
+            if (c) c.unreadCount = 0;
+            renderConversationList(conversations);
+        }
+    } catch (e) {
+        area.innerHTML = '<div class="text-danger text-center">Lỗi tải tin nhắn!</div>';
+    }
+}
+
+function appendMessageBubble(msg) {
+    const area = document.getElementById('messagesArea');
+    if (!area) return;
+
+    const isCustomer = msg.senderRole === 'CUSTOMER';
+    const isBot = msg.senderRole === 'BOT';
+    const isAdmin = msg.senderRole === 'ADMIN';
+
+    const div = document.createElement('div');
+    div.className = `d-flex ${isAdmin ? 'justify-content-end' : 'justify-content-start'}`;
+
+    let bubbleHtml = '';
+    if (isAdmin) {
+        bubbleHtml = `
+            <div style="max-width: 70%;">
+                <div class="p-3 text-white rounded-4 shadow-sm" style="background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%); border-bottom-right-radius: 4px !important; font-size: 14px; line-height: 1.5; white-space: pre-line;">
+                    ${escapeHtml(msg.content)}
+                </div>
+                <div class="text-end mt-1" style="font-size: 11px; color: #94a3b8;">
+                    ${msg.time || ''} • Bạn (${escapeHtml(msg.senderName || 'Admin')})
+                </div>
+            </div>
+        `;
+    } else if (isBot) {
+        bubbleHtml = `
+            <div style="max-width: 75%;">
+                <div class="d-flex align-items-center gap-1 mb-1">
+                    <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2" style="font-size: 10px;">
+                        <i class="fa-solid fa-robot me-1"></i> ${escapeHtml(msg.senderName || 'Trợ lý Bot')}
+                    </span>
+                    <span style="font-size: 11px; color: #94a3b8;">${msg.time || ''}</span>
+                </div>
+                <div class="p-3 rounded-4 shadow-sm" style="background: #241d10; color: #fef08a; border-bottom-left-radius: 4px !important; font-size: 13.5px; line-height: 1.5; white-space: pre-line; border: 1px solid #4a3818;">
+                    ${formatBotContent(msg.content)}
+                </div>
+            </div>
+        `;
+    } else {
+        // Customer
+        bubbleHtml = `
+            <div style="max-width: 70%;">
+                <div class="d-flex align-items-center gap-1 mb-1">
+                    <span class="fw-bold" style="font-size: 12px; color: #f1f1f5;">${escapeHtml(msg.senderName || 'Khách hàng')}</span>
+                    <span style="font-size: 11px; color: #94a3b8;">• ${msg.time || ''}</span>
+                </div>
+                <div class="p-3 rounded-4 shadow-sm" style="border-bottom-left-radius: 4px !important; font-size: 14px; line-height: 1.5; white-space: pre-line; background: #1e1e28; border: 1px solid #2e2e40; color: #ededf4;">
+                    ${escapeHtml(msg.content)}
+                </div>
+            </div>
+        `;
+    }
+
+    div.innerHTML = bubbleHtml;
+    area.appendChild(div);
+}
+
+async function handleAdminSend(e) {
+    e.preventDefault();
+    if (!activeKey) return;
+    const input = document.getElementById('adminMessageInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+
+    try {
+        const formData = new URLSearchParams();
+        formData.append('conversationKey', activeKey);
+        formData.append('content', text);
+
+        const res = await fetch('/api/chat/admin/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
+
+        if (res.ok) {
+            const newMsg = await res.json();
+            // Bubble is added via WebSocket or can be appended directly
+            loadConversations();
+        }
+    } catch (err) {
+        console.error('Send error:', err);
+    }
+}
+
+function insertQuickReply(text) {
+    const input = document.getElementById('adminMessageInput');
+    input.value = text;
+    input.focus();
+}
+
+function closeActiveChat() {
+    activeKey = null;
+    document.getElementById('chatActiveView').style.setProperty('display', 'none', 'important');
+    document.getElementById('noChatSelected').style.setProperty('display', 'flex', 'important');
+    renderConversationList(conversations);
+}
+
+function scrollToBottom() {
+    const area = document.getElementById('messagesArea');
+    if (area) {
+        area.scrollTop = area.scrollHeight;
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
+}
+
+function formatBotContent(str) {
+    if (!str) return '';
+    let escaped = escapeHtml(str);
+    // Replace **bold** with <strong>
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    return escaped;
+}
+</script>
+</body>
+</html>

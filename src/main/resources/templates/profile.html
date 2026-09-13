@@ -46,27 +46,53 @@
                     
                     <form th:action="@{/profile/update}" method="post">
                         <div class="mb-3">
-                            <label for="hoTen" class="form-label">Họ và tên *</label>
-                            <input type="text" name="hoTen" id="hoTen" class="form-control" th:value="${customer.hoTen}" required placeholder="Họ và tên...">
+                            <label for="hoTen" class="form-label fw-semibold">Họ và tên <span class="text-danger">*</span></label>
+                            <input type="text" name="hoTen" id="hoTen" class="form-control" th:value="${customer.hoTen}" required minlength="2" maxlength="100" pattern="^[\p{L}\s\.\-\']{2,100}$" placeholder="Họ và tên...">
                         </div>
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label for="soDienThoai" class="form-label">Số điện thoại</label>
-                                <input type="tel" name="soDienThoai" id="soDienThoai" class="form-control" th:value="${customer.soDienThoai}" placeholder="Số điện thoại...">
+                                <label for="soDienThoai" class="form-label fw-semibold">Số điện thoại</label>
+                                <input type="tel" name="soDienThoai" id="soDienThoai" class="form-control font-monospace" th:value="${customer.soDienThoai}" pattern="^0[35789][0-9]{8}$" maxlength="10" placeholder="10 số di động (03x, 05x, 07x, 08x, 09x)">
                             </div>
                             <div class="col-md-6">
-                                <label for="email" class="form-label">Email</label>
+                                <label for="email" class="form-label fw-semibold">Email</label>
                                 <input type="email" name="email" id="email" class="form-control" th:value="${customer.email}" placeholder="Địa chỉ email...">
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label for="diaChi" class="form-label">Địa chỉ mặc định</label>
-                            <textarea name="diaChi" id="diaChi" class="form-control" rows="3" placeholder="Nhập địa chỉ giao nhận..." th:text="${customer.diaChi}"></textarea>
+                            <label for="diaChi" class="form-label fw-semibold">Địa chỉ mặc định</label>
+                            <textarea name="diaChi" id="diaChi" class="form-control" rows="3" minlength="8" maxlength="255" placeholder="Ghi rõ số nhà, tên đường, phường/xã, quận/huyện..." th:text="${customer.diaChi}"></textarea>
                         </div>
 
+
                         <button type="submit" class="btn btn-primary px-4 py-2"><i class="fa-solid fa-floppy-disk me-2"></i>Lưu thay đổi</button>
+                    </form>
+                </div>
+
+                <!-- Change Password Form -->
+                <div class="glass-card p-5 mt-4">
+                    <h5 class="fw-bold mb-4 border-bottom pb-2 text-danger"><i class="fa-solid fa-key me-2"></i>Đổi mật khẩu</h5>
+                    
+                    <form th:action="@{/profile/change-password}" method="post">
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label">Mật khẩu hiện tại *</label>
+                            <input type="password" name="currentPassword" id="currentPassword" class="form-control" required placeholder="Nhập mật khẩu hiện tại...">
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="newPassword" class="form-label">Mật khẩu mới *</label>
+                                <input type="password" name="newPassword" id="newPassword" class="form-control" required minlength="6" placeholder="Tối thiểu 6 ký tự...">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới *</label>
+                                <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" required minlength="6" placeholder="Nhập lại mật khẩu mới...">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-outline-danger px-4 py-2"><i class="fa-solid fa-shield-halved me-2"></i>Cập nhật mật khẩu</button>
                     </form>
                 </div>
             </div>

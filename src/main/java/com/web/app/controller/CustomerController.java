@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.time.LocalDateTime;
 import org.springframework.http.ResponseEntity;
 import com.web.app.repository.BienTheSanPhamRepository;
 
@@ -41,17 +42,26 @@ public class CustomerController {
     private MaGiamGiaService maGiamGiaService;
 
     @Autowired
+    private VietQrService vietQrService;
+
+    @Autowired
     private BienTheSanPhamRepository bienTheSanPhamRepository;
 
     @Autowired
+    private DanhGiaSanPhamService danhGiaSanPhamService;
+
+    @Autowired
     private RealtimeService realtimeService;
+
+    @Autowired
+    private TaiKhoanService taiKhoanService;
 
     // Helper to get logged-in customer from session
     private KhachHang getSessionCustomer(HttpSession session) {
         return (KhachHang) session.getAttribute("user");
     }
 
-    @GetMapping("/")
+    @GetMapping({"/", ""})
     public String homepage(@RequestParam(value = "keyword", required = false) String keyword,
                            @RequestParam(value = "danhMucId", required = false) Integer danhMucId,
                            @RequestParam(value = "thuongHieuId", required = false) Integer thuongHieuId,
@@ -94,12 +104,38 @@ public class CustomerController {
     }
 
     @GetMapping("/san-pham/{id}")
-    public String productDetails(@PathVariable("id") Integer id, Model model) {
+    public String productDetails(@PathVariable("id") Integer id, HttpSession session, Model model) {
         SanPham sp = sanPhamService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại!"));
         model.addAttribute("product", sp);
         model.addAttribute("variants", bienTheSanPhamRepository.findBySanPhamIdOrderByMauSacAscKichCoAsc(id));
+        model.addAttribute("reviews", danhGiaSanPhamService.getReviewsByProductId(id));
+        model.addAttribute("avgRating", danhGiaSanPhamService.getAverageRating(id));
+        model.addAttribute("reviewCount", danhGiaSanPhamService.getReviewCount(id));
+
+        KhachHang kh = getSessionCustomer(session);
+        boolean hasPurchased = kh != null && danhGiaSanPhamService.hasCustomerPurchasedProduct(kh.getId(), id);
+        model.addAttribute("hasPurchased", hasPurchased);
         return "product_detail";
+    }
+
+    @PostMapping("/san-pham/{id}/review")
+    public String submitProductReview(@PathVariable("id") Integer id,
+                                      @RequestParam("soSao") int soSao,
+                                      @RequestParam("noiDung") String noiDung,
+                                      HttpSession session,
+                                      RedirectAttributes redirectAttributes) {
+        KhachHang kh = getSessionCustomer(session);
+        if (kh == null) {
+            return "redirect:/login?error=login-required&redirect=/san-pham/" + id;
+        }
+        try {
+            danhGiaSanPhamService.addReview(kh.getId(), id, soSao, noiDung);
+            redirectAttributes.addFlashAttribute("successMessage", "Cảm ơn bạn đã gửi đánh giá sản phẩm!");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/san-pham/" + id;
     }
 
     @GetMapping("/cart")
@@ -236,8 +272,8 @@ public class CustomerController {
         }
     }
 
-    @GetMapping("/cart/remove/{productId}")
-    public String removeCartItem(@PathVariable("productId") Integer productId,
+    @GetMapping("/cart/remove/{itemId}")
+    public String removeCartItem(@PathVariable("itemId") Integer itemId,
                                  HttpSession session,
                                  RedirectAttributes redirectAttributes) {
         KhachHang kh = getSessionCustomer(session);
@@ -245,7 +281,7 @@ public class CustomerController {
             return "redirect:/login?error=login-required&redirect=/cart";
         }
         try {
-            gioHangService.removeCartItem(kh.getId(), productId);
+            gioHangService.removeCartItemById(kh.getId(), itemId);
             redirectAttributes.addFlashAttribute("successMessage", "Đã xóa sản phẩm khỏi giỏ hàng.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi xóa sản phẩm: " + e.getMessage());
@@ -273,10 +309,16 @@ public class CustomerController {
         model.addAttribute("cartItems", items);
         model.addAttribute("tongTien", tongTien);
         
-        // Pass customer defaults
-        model.addAttribute("hoTenNhan", kh.getHoTen());
-        model.addAttribute("soDienThoaiNhan", kh.getSoDienThoai());
-        model.addAttribute("diaChiNhan", kh.getDiaChi());
+        // Pass customer defaults if not already present from redirectAttributes
+        if (!model.containsAttribute("hoTenNhan")) {
+            model.addAttribute("hoTenNhan", kh.getHoTen());
+        }
+        if (!model.containsAttribute("soDienThoaiNhan")) {
+            model.addAttribute("soDienThoaiNhan", kh.getSoDienThoai());
+        }
+        if (!model.containsAttribute("diaChiNhan")) {
+            model.addAttribute("diaChiNhan", kh.getDiaChi());
+        }
 
         return "checkout";
     }
@@ -287,6 +329,7 @@ public class CustomerController {
                                   @RequestParam("diaChiNhan") String diaChiNhan,
                                   @RequestParam(value = "ghiChu", required = false) String ghiChu,
                                   @RequestParam(value = "couponCode", required = false) String couponCode,
+                                  @RequestParam(value = "phuongThucThanhToan", defaultValue = "COD") String phuongThucThanhToan,
                                   HttpSession session,
                                   RedirectAttributes redirectAttributes) {
         KhachHang kh = getSessionCustomer(session);
@@ -294,14 +337,28 @@ public class CustomerController {
             return "redirect:/login?error=login-required&redirect=/checkout";
         }
         try {
-            DonHang order = donHangService.createOrder(kh.getId(), hoTenNhan, soDienThoaiNhan, diaChiNhan, ghiChu, couponCode);
-            redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng của bạn là #" + order.getId());
-            return "redirect:/orders";
+            DonHang order = donHangService.createOrder(kh.getId(), hoTenNhan, soDienThoaiNhan, diaChiNhan, ghiChu, couponCode, phuongThucThanhToan);
+            if ("VNPAY".equalsIgnoreCase(order.getPhuongThucThanhToan())) {
+                return "redirect:/payment/vnpay/" + order.getId();
+            }
+            if ("VIETQR".equalsIgnoreCase(order.getPhuongThucThanhToan())) {
+                redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Vui lòng quét mã QR để chuyển khoản thanh toán đơn hàng #" + order.getId());
+                return "redirect:/orders/" + order.getId();
+            }
+            redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng #" + order.getId() + ". Cảm ơn quý khách đã mua sắm tại HATS.VN.");
+            return "redirect:/orders/" + order.getId();
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("hoTenNhan", hoTenNhan);
+            redirectAttributes.addFlashAttribute("soDienThoaiNhan", soDienThoaiNhan);
+            redirectAttributes.addFlashAttribute("diaChiNhan", diaChiNhan);
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("trống")) {
+                return "redirect:/cart";
+            }
             return "redirect:/checkout";
         }
     }
+
 
     @PostMapping("/checkout/apply-coupon")
     @ResponseBody
@@ -364,15 +421,25 @@ public class CustomerController {
     }
 
     @GetMapping("/orders")
-    public String orderHistory(HttpSession session, Model model) {
+    public String orderHistory(@RequestParam(value = "page", defaultValue = "1") int page,
+                               @RequestParam(value = "size", defaultValue = "6") int size,
+                               @RequestParam(value = "status", defaultValue = "ALL") String status,
+                               HttpSession session, Model model) {
         KhachHang kh = getSessionCustomer(session);
         if (kh == null) {
             return "redirect:/login?error=login-required&redirect=/orders";
         }
-        List<DonHang> orders = donHangService.getOrderHistory(kh.getId());
-        model.addAttribute("orders", orders);
+        Page<DonHang> ordersPage = donHangService.getOrderHistoryPaginated(kh.getId(), status, page, size);
+        model.addAttribute("ordersPage", ordersPage);
+        model.addAttribute("orders", ordersPage.getContent());
+        model.addAttribute("currentPage", Math.max(1, page));
+        model.addAttribute("totalPages", ordersPage.getTotalPages());
+        model.addAttribute("totalElements", ordersPage.getTotalElements());
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("pageSize", size);
         return "orders";
     }
+
 
     @GetMapping("/orders/{id}")
     public String orderDetails(@PathVariable("id") Integer id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -392,6 +459,10 @@ public class CustomerController {
         List<ChiTietDonHang> details = donHangService.getOrderDetails(id);
         model.addAttribute("order", order);
         model.addAttribute("details", details);
+        if ("VIETQR".equalsIgnoreCase(order.getPhuongThucThanhToan())) {
+            model.addAttribute("vietQrUrl", vietQrService.generateQrUrl(order.getId(), order.getTongTien() == null ? 0 : order.getTongTien()));
+            model.addAttribute("bankInfo", vietQrService);
+        }
         return "order_detail";
     }
 
@@ -421,6 +492,81 @@ public class CustomerController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/orders/" + id;
+    }
+
+    @PostMapping("/orders/{id}/confirm-transfer")
+    public String confirmCustomerTransfer(@PathVariable("id") Integer id,
+                                          HttpSession session,
+                                          RedirectAttributes redirectAttributes) {
+        KhachHang kh = getSessionCustomer(session);
+        if (kh == null) {
+            return "redirect:/login?error=login-required&redirect=/orders/" + id;
+        }
+        DonHang order = donHangService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Đơn hàng không tồn tại!"));
+
+        if (!order.getKhachHang().getId().equals(kh.getId())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền thao tác trên đơn hàng này!");
+            return "redirect:/orders";
+        }
+
+        String txn = "FT" + (System.currentTimeMillis() % 1000000000);
+        donHangService.updatePaymentStatus(id, "PAID", txn, LocalDateTime.now());
+        if ("PENDING".equals(order.getTrangThai())) {
+            donHangService.updateOrderStatus(id, "CONFIRMED");
+        }
+        redirectAttributes.addFlashAttribute("successMessage", "Xác nhận chuyển khoản thành công! Đơn hàng đã chuyển sang ĐÃ THANH TOÁN (Mã GD: " + txn + ").");
+        return "redirect:/orders/" + id;
+    }
+
+    @GetMapping("/api/payment/check-status/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> checkPaymentStatus(@PathVariable("id") Integer id, HttpSession session) {
+        KhachHang kh = getSessionCustomer(session);
+        if (kh == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+        DonHang order = donHangService.findById(id).orElse(null);
+        if (order == null || !order.getKhachHang().getId().equals(kh.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Forbidden"));
+        }
+        Map<String, Object> res = new HashMap<>();
+        res.put("paid", "PAID".equalsIgnoreCase(order.getTrangThaiThanhToan()));
+        res.put("paymentStatus", order.getTrangThaiThanhToan());
+        res.put("orderStatus", order.getTrangThai());
+        res.put("transactionNo", order.getMaGiaoDich() != null ? order.getMaGiaoDich() : "");
+        return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/api/payment/simulate-transfer/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> simulateBankTransfer(@PathVariable("id") Integer id, HttpSession session) {
+        KhachHang kh = getSessionCustomer(session);
+        if (kh == null) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Vui lòng đăng nhập!");
+            return ResponseEntity.status(401).body(err);
+        }
+        DonHang order = donHangService.findById(id).orElse(null);
+        if (order == null || !order.getKhachHang().getId().equals(kh.getId())) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Không có quyền thực hiện thao tác!");
+            return ResponseEntity.status(403).body(err);
+        }
+
+        String txn = "FT" + (System.currentTimeMillis() % 1000000000);
+        donHangService.updatePaymentStatus(id, "PAID", txn, LocalDateTime.now());
+        if ("PENDING".equals(order.getTrangThai())) {
+            donHangService.updateOrderStatus(id, "CONFIRMED");
+        }
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("message", "Xác nhận chuyển khoản thành công từ ngân hàng qua cổng Napas 247!");
+        res.put("transactionNo", txn);
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/profile")
@@ -458,5 +604,51 @@ public class CustomerController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/profile";
+    }
+
+    @PostMapping("/profile/change-password")
+    public String changePassword(@RequestParam("currentPassword") String currentPassword,
+                                 @RequestParam("newPassword") String newPassword,
+                                 @RequestParam("confirmPassword") String confirmPassword,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        KhachHang kh = getSessionCustomer(session);
+        if (kh == null) {
+            return "redirect:/login?error=login-required&redirect=/profile";
+        }
+        try {
+            if (newPassword == null || newPassword.trim().length() < 6) {
+                throw new IllegalArgumentException("Mật khẩu mới phải có ít nhất 6 ký tự!");
+            }
+            if (!newPassword.equals(confirmPassword)) {
+                throw new IllegalArgumentException("Xác nhận mật khẩu mới không khớp!");
+            }
+            taiKhoanService.doiMatKhau(kh.getTaiKhoan().getId(), currentPassword, newPassword);
+            redirectAttributes.addFlashAttribute("successMessage", "Đổi mật khẩu thành công! Hãy ghi nhớ mật khẩu mới của bạn.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/profile";
+    }
+
+    @GetMapping("/orders/{id}/invoice")
+    public String viewCustomerOrderInvoice(@PathVariable("id") Integer id,
+                                           HttpSession session,
+                                           Model model,
+                                           RedirectAttributes redirectAttributes) {
+        KhachHang kh = getSessionCustomer(session);
+        if (kh == null) {
+            return "redirect:/login?error=login-required&redirect=/orders/" + id + "/invoice";
+        }
+        DonHang order = donHangService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Đơn hàng không tồn tại!"));
+        if (!order.getKhachHang().getId().equals(kh.getId())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền xem hóa đơn này!");
+            return "redirect:/orders";
+        }
+        model.addAttribute("order", order);
+        model.addAttribute("details", donHangService.getOrderDetails(id));
+        model.addAttribute("isAdmin", false);
+        return "invoice";
     }
 }

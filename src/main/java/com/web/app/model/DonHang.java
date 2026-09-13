@@ -47,4 +47,18 @@ public class DonHang {
     @Column(name = "so_tien_giam")
     @Builder.Default
     private Double soTienGiam = 0.0;
+
+    @Column(name = "phuong_thuc_thanh_toan", length = 30)
+    @Builder.Default
+    private String phuongThucThanhToan = "COD"; // "COD", "VIETQR"
+
+    @Column(name = "trang_thai_thanh_toan", length = 30)
+    @Builder.Default
+    private String trangThaiThanhToan = "UNPAID"; // "UNPAID", "PAID"
+
+    @Column(name = "ma_giao_dich", length = 100)
+    private String maGiaoDich;
+
+    @Column(name = "ngay_thanh_toan")
+    private LocalDateTime ngayThanhToan;
 }

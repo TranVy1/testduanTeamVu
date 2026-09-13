@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Hóa đơn #' + ${order.id} + ' - HATS.VN'">Hóa đơn bán lẻ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e293b;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --bg-light: #f8fafc;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            color: var(--text-dark);
+            padding: 30px 15px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .action-bar {
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-outline {
+            background: #fff;
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+        .invoice-sheet {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 24px;
+            margin-bottom: 24px;
+        }
+        .brand-logo h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .brand-logo p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .invoice-meta {
+            text-align: right;
+        }
+        .invoice-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+        .invoice-number {
+            font-size: 15px;
+            font-weight: 700;
+            color: #2563eb;
+            margin: 4px 0;
+        }
+        .invoice-date {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 28px;
+            padding: 16px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .info-block h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .info-block p {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-unpaid {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .table-wrap {
+            margin-bottom: 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: var(--primary);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th.text-center, td.text-center {
+            text-align: center;
+        }
+        th.text-end, td.text-end {
+            text-align: right;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+        .prod-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .prod-variant {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        .summary-wrap {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+        .summary-table {
+            width: 320px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .summary-row.total {
+            border-top: 2px solid var(--primary);
+            padding-top: 10px;
+            margin-top: 6px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .signatures {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px dashed var(--border-color);
+        }
+        .sign-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .sign-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 60px;
+        }
+        .invoice-footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .action-bar {
+                display: none !important;
+            }
+            .invoice-sheet {
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="action-bar">
+    <a th:href="${isAdmin} ? @{/admin/orders/{id}(id=${order.id})} : @{/orders/{id}(id=${order.id})}" class="btn btn-outline">
+        <i class="fa-solid fa-arrow-left"></i> Quay lại chi tiết đơn hàng
+    </a>
+    <button onclick="window.print()" class="btn btn-primary">
+        <i class="fa-solid fa-print"></i> In hóa đơn / Lưu PDF
+    </button>
+</div>
+
+<div class="invoice-sheet">
+    <header class="invoice-header">
+        <div class="brand-logo">
+            <h1><i class="fa-solid fa-hat-cowboy text-primary"></i> HATS.VN</h1>
+            <p>Hệ Thống Phụ Kiện Mũ Thời Trang Cao Cấp</p>
+            <p>Địa chỉ: 123 Phố Huế, Q. Hai Bà Trưng, Hà Nội</p>
+            <p>Hotline: 1900 8888 | Email: support@hats.vn | MST: 0109887766</p>
+        </div>
+        <div class="invoice-meta">
+            <h2 class="invoice-title">HÓA ĐƠN BÁN LẺ</h2>
+            <div class="invoice-number" th:text="'#DH' + ${order.id}">#DH000</div>
+            <div class="invoice-date" th:text="'Ngày đặt: ' + ${#temporals.format(order.ngayDat, 'dd/MM/yyyy HH:mm')}"></div>
+            <div class="mt-2" style="margin-top: 8px;">
+                <span class="badge" th:classappend="${order.trangThaiThanhToan == 'PAID'} ? 'badge-paid' : 'badge-unpaid'"
+                      th:text="${order.trangThaiThanhToan == 'PAID'} ? 'ĐÃ THANH TOÁN' : 'CHƯA THANH TOÁN'">
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <div class="info-grid">
+        <div class="info-block">
+            <h3><i class="fa-solid fa-user"></i> Khách hàng / Người nhận</h3>
+            <p><strong th:text="${order.hoTenNhan}">Nguyễn Văn A</strong></p>
+            <p><i class="fa-solid fa-phone" style="width: 16px;"></i> <span th:text="${order.soDienThoaiNhan}">0912345678</span></p>
+            <p><i class="fa-solid fa-location-dot" style="width: 16px;"></i> <span th:text="${order.diaChiNhan}">Hà Nội</span></p>
+            <p th:if="${order.ghiChu != null and !order.ghiChu.isBlank()}"><i class="fa-regular fa-note-sticky" style="width: 16px;"></i> <em>Ghi chú: <span th:text="${order.ghiChu}"></span></em></p>
+        </div>
+        <div class="info-block">
+            <h3><i class="fa-solid fa-truck-fast"></i> Thông tin thanh toán & giao hàng</h3>
+            <p><strong>Phương thức:</strong> 
+                <span th:text="${order.phuongThucThanhToan == 'VNPAY' ? 'Cổng điện tử VNPAY' : (order.phuongThucThanhToan == 'VIETQR' ? 'Chuyển khoản VietQR / Napas247' : 'Thanh toán khi nhận hàng (COD)')}"></span>
+            </p>
+            <p><strong>Trạng thái đơn:</strong> 
+                <span th:text="${order.trangThai == 'PENDING' ? 'Chờ xử lý' : order.trangThai == 'CONFIRMED' ? 'Đã xác nhận' : order.trangThai == 'SHIPPING' ? 'Đang giao' : order.trangThai == 'DELIVERED' ? 'Đã hoàn thành' : 'Đã hủy'}"></span>
+            </p>
+            <p><strong>Phí giao hàng:</strong> <span style="color: #16a34a; font-weight: 600;">Miễn phí vận chuyển</span></p>
+            <p th:if="${order.khuyenMai != null}"><strong>Mã ưu đãi:</strong> <span th:text="${order.khuyenMai.maCode}"></span></p>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th class="text-center" style="width: 40px;">STT</th>
+                    <th>Tên sản phẩm & phân loại</th>
+                    <th class="text-end" style="width: 120px;">Đơn giá</th>
+                    <th class="text-center" style="width: 70px;">SL</th>
+                    <th class="text-end" style="width: 130px;">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="det, iterStat : ${details}">
+                    <td class="text-center" th:text="${iterStat.count}">1</td>
+                    <td>
+                        <div class="prod-name" th:text="${det.sanPham != null ? det.sanPham.tenSanPham : 'Sản phẩm'}"></div>
+                        <div class="prod-variant" th:if="${det.bienThe != null}" th:text="'Phân loại: ' + ${det.bienThe.mauSac} + ' / Size ' + ${det.bienThe.kichCo}"></div>
+                        <div class="prod-variant" th:if="${det.bienThe == null and det.sanPham != null and det.sanPham.thuongHieu != null}" th:text="'Thương hiệu: ' + ${det.sanPham.thuongHieu.tenThuongHieu}"></div>
+                    </td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(det.giaBan, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></td>
+                    <td class="text-center" th:text="${det.soLuong}">1</td>
+                    <td class="text-end" style="font-weight: 600;" th:text="${#numbers.formatDecimal(det.giaBan * det.soLuong, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="summary-wrap">
+        <div class="summary-table">
+            <div class="summary-row">
+                <span>Tổng tiền hàng:</span>
+                <strong th:text="${#numbers.formatDecimal(order.tongTien + (order.soTienGiam != null ? order.soTienGiam : 0), 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
+            </div>
+            <div class="summary-row" th:if="${order.soTienGiam != null and order.soTienGiam > 0}">
+                <span>Giảm giá (Voucher):</span>
+                <span style="color: #dc2626;" th:text="'-' + ${#numbers.formatDecimal(order.soTienGiam, 0, 'COMMA', 0, 'POINT')} + ' ₫'">-0 ₫</span>
+            </div>
+            <div class="summary-row">
+                <span>Phí vận chuyển:</span>
+                <span style="color: #16a34a;">0 ₫</span>
+            </div>
+            <div class="summary-row total">
+                <span>TỔNG THANH TOÁN:</span>
+                <span style="color: #2563eb;" th:text="${#numbers.formatDecimal(order.tongTien, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="signatures">
+        <div>
+            <div class="sign-title">NGƯỜI MUA HÀNG</div>
+            <div class="sign-sub">(Ký và ghi rõ họ tên)</div>
+        </div>
+        <div>
+            <div class="sign-title">NGƯỜI BÁN HÀNG / THỦ KHO</div>
+            <div class="sign-sub">(Ký, đóng dấu xác nhận)</div>
+        </div>
+    </div>
+
+    <footer class="invoice-footer">
+        <p>Cảm ơn Quý khách đã tin tưởng và mua sắm tại <strong>HATS.VN</strong>!</p>
+        <p>Quý khách vui lòng giữ hóa đơn này trong trường hợp đổi trả hoặc bảo hành sản phẩm trong vòng 7 ngày.</p>
+    </footer>
+</div>
+
+</body>
+</html>

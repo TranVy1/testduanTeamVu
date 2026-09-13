@@ -27,7 +27,7 @@
                     <tr th:each="cat:${categories}">
                         <td data-label="ID"><span class="category-id" th:text="${'#'+cat.id}"></span></td>
                         <td data-label="Tên danh mục"><form th:action="@{/admin/categories/edit/{id}(id=${cat.id})}" method="post" class="category-edit-form"><input type="text" name="tenDanhMuc" class="category-input" th:value="${cat.tenDanhMuc}" th:data-original="${cat.tenDanhMuc}" required maxlength="100" aria-label="Tên danh mục"><button type="submit" class="save-category-btn" disabled title="Thay đổi tên để bật nút lưu"><i class="fa-solid fa-check"></i><span>Lưu</span></button></form></td>
-                        <td data-label="Thao tác"><a th:href="@{/admin/categories/delete/{id}(id=${cat.id})}" class="delete-category-btn" onclick="return confirm('Bạn chắc chắn muốn xóa danh mục này? Nếu danh mục đang có sản phẩm liên kết, thao tác sẽ không thể thực hiện.')"><i class="fa-regular fa-trash-can"></i><span>Xóa danh mục</span></a></td>
+                        <td data-label="Thao tác"><a th:href="@{/admin/categories/delete/{id}(id=${cat.id})}" class="delete-category-btn" data-confirm="Bạn chắc chắn muốn xóa danh mục này? Nếu danh mục đang có sản phẩm liên kết, thao tác sẽ không thể thực hiện." data-confirm-title="Xóa danh mục?" data-confirm-btn="Xóa danh mục"><i class="fa-regular fa-trash-can"></i><span>Xóa danh mục</span></a></td>
                     </tr></tbody></table>
                 </div>
                 <div class="empty-state compact" th:if="${#lists.isEmpty(categories)}"><div class="empty-icon"><i class="fa-regular fa-folder-open"></i></div><h4>Chưa có danh mục nào</h4><p>Hãy tạo danh mục đầu tiên bằng biểu mẫu bên cạnh.</p></div>

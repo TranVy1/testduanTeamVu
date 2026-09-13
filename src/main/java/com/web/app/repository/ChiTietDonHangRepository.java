@@ -14,4 +14,7 @@ public interface ChiTietDonHangRepository extends JpaRepository<ChiTietDonHang, 
     List<ChiTietDonHang> findByDonHangId(Integer donHangId);
     @Query("select coalesce(sum(c.soLuong), 0) from ChiTietDonHang c where c.sanPham.id = :productId and c.donHang.trangThai = 'SHIPPING'")
     Long sumShippingQuantityByProductId(@Param("productId") Integer productId);
+
+    @Query("select count(c) > 0 from ChiTietDonHang c where c.donHang.khachHang.id = :khachHangId and c.sanPham.id = :productId and c.donHang.trangThai != 'CANCELLED'")
+    boolean hasPurchasedProduct(@Param("khachHangId") Integer khachHangId, @Param("productId") Integer productId);
 }

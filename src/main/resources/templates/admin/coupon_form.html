@@ -158,7 +158,15 @@
                 const value = Number(document.getElementById('giaTriGiam').value);
                 if ((start && end && end <= start) || value <= 0 || (loaiGiamGia.value === 'PERCENTAGE' && value > 100)) {
                     event.preventDefault();
-                    alert(start && end && end <= start ? 'Ngày kết thúc phải sau ngày bắt đầu.' : 'Giá trị giảm không hợp lệ; phần trăm phải từ 1 đến 100.');
+                    const msg = (start && end && end <= start) ? 'Ngày kết thúc phải sau ngày bắt đầu.' : 'Giá trị giảm không hợp lệ; phần trăm phải từ 1 đến 100.';
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Dữ liệu không hợp lệ',
+                            text: msg,
+                            confirmButtonColor: '#4f46e5'
+                        });
+                    }
                 }
             });
         });

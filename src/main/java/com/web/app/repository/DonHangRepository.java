@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 @Repository
 public interface DonHangRepository extends JpaRepository<DonHang, Integer> {
     List<DonHang> findByKhachHangIdOrderByNgayDatDesc(Integer khachHangId);
+    Page<DonHang> findByKhachHangId(Integer khachHangId, Pageable pageable);
+    Page<DonHang> findByKhachHangIdAndTrangThai(Integer khachHangId, String trangThai, Pageable pageable);
+
     List<DonHang> findAllByOrderByNgayDatDesc();
 
     @Query("SELECT d FROM DonHang d JOIN d.khachHang k WHERE " +

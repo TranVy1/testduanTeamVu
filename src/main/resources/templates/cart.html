@@ -44,9 +44,9 @@
                                         <img th:src="${item.sanPham.anhUrl != null ? (item.sanPham.anhUrl.startsWith('http') ? item.sanPham.anhUrl : '/uploads/' + item.sanPham.anhUrl) : '/images/hat-placeholder.svg'}"
                                              class="rounded-3 me-3" alt="Product Image" onerror="this.onerror=null;this.src='/images/hat-placeholder.svg'" style="width: 60px; height: 60px; object-fit: cover;">
                                         <div>
-                                            <a th:href="@{/san-pham/{id}(id=${item.sanPham.id})}" class="fw-bold text-dark text-decoration-none" th:text="${item.sanPham.tenSanPham}"></a>
+                                            <a th:href="@{/san-pham/{id}(id=${item.sanPham.id})}" class="fw-bold text-white text-decoration-none" th:text="${item.sanPham.tenSanPham}"></a>
                                             <div th:if="${item.bienThe != null}" class="text-muted small" th:text="${item.bienThe.mauSac + ' / ' + item.bienThe.kichCo}"></div>
-                                            <div class="text-muted small" th:text="'Kho: ' + ${item.sanPham.soLuong} + ' chiếc'"></div>
+                                            <div class="text-muted small" th:text="'Kho: ' + ${item.tonKho} + ' chiếc'"></div>
                                         </div>
                                     </div>
                                 </td>
@@ -217,7 +217,18 @@
                     const productId = removeBtn.getAttribute('data-product-id');
                     if (!productId) return;
                     
-                    if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                    Swal.fire({
+                        title: 'Xóa khỏi giỏ hàng?',
+                        text: 'Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Xóa ngay',
+                        cancelButtonText: 'Giữ lại',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (!result.isConfirmed) return;
                         const rowEl = removeBtn.closest('tr');
                         
                         const formData = new URLSearchParams();

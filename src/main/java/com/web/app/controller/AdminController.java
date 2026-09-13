@@ -3,6 +3,7 @@ package com.web.app.controller;
 import com.web.app.dto.DoanhThuDTO;
 import com.web.app.model.*;
 import com.web.app.service.*;
+import com.web.app.util.FileUploadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -59,6 +60,9 @@ public class AdminController {
     private MaGiamGiaService maGiamGiaService;
 
     @Autowired
+    private VietQrService vietQrService;
+
+    @Autowired
     private BienTheSanPhamRepository bienTheSanPhamRepository;
 
     @Autowired
@@ -66,6 +70,9 @@ public class AdminController {
 
     @Autowired
     private ChiTietGioHangRepository chiTietGioHangRepository;
+
+    @Autowired
+    private ExcelExportService excelExportService;
 
     // 1. Dashboard & Statistics
     @GetMapping({"", "/dashboard"})
@@ -148,18 +155,15 @@ public class AdminController {
                                 @RequestParam(value = "variantStock", required = false) List<Integer> variantStocks,
                                 RedirectAttributes redirectAttributes) {
         try {
-            if (!file.isEmpty()) {
-                String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-                Path path = Paths.get("uploads/" + fileName);
-                Files.createDirectories(path.getParent());
-                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            if (file != null && !file.isEmpty()) {
+                String fileName = FileUploadUtil.saveImage(file);
                 sp.setAnhUrl(fileName);
             }
             sanPhamService.save(sp);
             saveVariants(sp, variantIds, variantColors, variantSizes, variantSkus, variantPrices, variantStocks);
             redirectAttributes.addFlashAttribute("successMessage", "Thêm sản phẩm thành công!");
-        } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi tải ảnh lên: " + e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi lưu sản phẩm: " + e.getMessage());
             return "redirect:/admin/products/create";
         }
         return "redirect:/admin/products";
@@ -199,20 +203,19 @@ public class AdminController {
             existing.setThuongHieu(sp.getThuongHieu());
 
             if (removeImage) {
+                FileUploadUtil.deleteImage(existing.getAnhUrl());
                 existing.setAnhUrl(null);
-            } else if (!file.isEmpty()) {
-                String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-                Path path = Paths.get("uploads/" + fileName);
-                Files.createDirectories(path.getParent());
-                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            } else if (file != null && !file.isEmpty()) {
+                FileUploadUtil.deleteImage(existing.getAnhUrl());
+                String fileName = FileUploadUtil.saveImage(file);
                 existing.setAnhUrl(fileName);
             }
 
             sanPhamService.save(existing);
             saveVariants(existing, variantIds, variantColors, variantSizes, variantSkus, variantPrices, variantStocks);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật sản phẩm thành công!");
-        } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi lưu ảnh sản phẩm!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi cập nhật sản phẩm: " + e.getMessage());
         }
         return "redirect:/admin/products";
     }
@@ -245,10 +248,12 @@ public class AdminController {
                 bienTheSanPhamRepository.delete(variant);
             }
         }
-        int totalStock = bienTheSanPhamRepository.findBySanPhamIdOrderByMauSacAscKichCoAsc(product.getId()).stream()
-                .mapToInt(BienTheSanPham::getSoLuong).sum();
-        product.setSoLuong(totalStock);
-        sanPhamService.save(product);
+        List<BienTheSanPham> remaining = bienTheSanPhamRepository.findBySanPhamIdOrderByMauSacAscKichCoAsc(product.getId());
+        if (!remaining.isEmpty()) {
+            int totalStock = remaining.stream().mapToInt(BienTheSanPham::getSoLuong).sum();
+            product.setSoLuong(totalStock);
+            sanPhamService.save(product);
+        }
     }
 
     @GetMapping("/products/delete/{id}")
@@ -468,6 +473,10 @@ public class AdminController {
                 .orElseThrow(() -> new IllegalArgumentException("Đơn hàng không tồn tại!"));
         model.addAttribute("order", order);
         model.addAttribute("details", donHangService.getOrderDetails(id));
+        if ("VIETQR".equalsIgnoreCase(order.getPhuongThucThanhToan())) {
+            model.addAttribute("vietQrUrl", vietQrService.generateQrUrl(order.getId(), order.getTongTien() == null ? 0 : order.getTongTien()));
+            model.addAttribute("bankInfo", vietQrService);
+        }
         return "admin/order_detail";
     }
 
@@ -482,6 +491,45 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
         return "redirect:/admin/orders/" + id;
+    }
+
+    @PostMapping("/orders/{id}/payment-status")
+    public String updateOrderPaymentStatus(@PathVariable("id") Integer id,
+                                           @RequestParam("trangThaiThanhToan") String paymentStatus,
+                                           RedirectAttributes redirectAttributes) {
+        try {
+            donHangService.updatePaymentStatus(id, paymentStatus);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái thanh toán thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/admin/orders/" + id;
+    }
+
+    @GetMapping("/orders/export-excel")
+    public void exportOrdersExcel(@RequestParam(value = "keyword", required = false) String keyword,
+                                  @RequestParam(value = "status", required = false) String status,
+                                  @RequestParam(value = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+                                  @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+                                  jakarta.servlet.http.HttpServletResponse response) throws IOException {
+        LocalDateTime fromDateTime = fromDate == null ? null : fromDate.atStartOfDay();
+        LocalDateTime toDateTime = toDate == null ? null : toDate.plusDays(1).atStartOfDay();
+        Page<DonHang> orderPage = donHangService.getFilteredOrders(keyword, status, fromDateTime, toDateTime, 0, 5000);
+
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        String filename = "BaoCao_DonHang_HatsVN_" + LocalDate.now() + ".xlsx";
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+        excelExportService.exportOrdersToExcel(orderPage.getContent(), response.getOutputStream());
+    }
+
+    @GetMapping("/orders/{id}/invoice")
+    public String viewOrderInvoice(@PathVariable("id") Integer id, Model model) {
+        DonHang order = donHangService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Đơn hàng không tồn tại!"));
+        model.addAttribute("order", order);
+        model.addAttribute("details", donHangService.getOrderDetails(id));
+        model.addAttribute("isAdmin", true);
+        return "invoice";
     }
 
     // 6. Coupon Management
@@ -576,5 +624,11 @@ public class AdminController {
         if (coupon.getNgayKetThuc() != null && now.isAfter(coupon.getNgayKetThuc())) return "EXPIRED";
         if (coupon.getNgayBatDau() != null && now.isBefore(coupon.getNgayBatDau())) return "UPCOMING";
         return Boolean.TRUE.equals(coupon.getTrangThai()) ? "ACTIVE" : "DISABLED";
+    }
+
+    // 8. Live Chat & Customer Support Consultation
+    @GetMapping("/chat")
+    public String chatDashboard(Model model) {
+        return "admin/chat";
     }
 }

@@ -10,6 +10,10 @@
     <section class="product-info-card">
       <div class="detail-meta"><span th:text="${product.danhMuc != null ? product.danhMuc.tenDanhMuc : 'Mũ thời trang'}">Danh mục</span><span th:text="${product.thuongHieu != null ? product.thuongHieu.tenThuongHieu : 'HATS.VN'}">Thương hiệu</span></div>
       <h1 th:text="${product.tenSanPham}">Tên sản phẩm</h1>
+      <div class="d-flex align-items-center mb-2" style="gap: 8px;">
+        <span class="text-warning fw-bold"><i class="fa-solid fa-star"></i> <span th:text="${avgRating}">5.0</span></span>
+        <span class="text-muted small" th:text="'(' + ${reviewCount} + ' đánh giá)'"></span>
+      </div>
       <p class="detail-price" id="variantPrice" th:text="${#numbers.formatDecimal(product.gia,0,'COMMA',0,'POINT')} + ' ₫'">0 ₫</p>
       <div class="detail-description"><h2>Mô tả sản phẩm</h2><p th:text="${product.moTa != null && !product.moTa.isBlank() ? product.moTa : 'Sản phẩm mũ thời trang được tuyển chọn bởi HATS.VN.'}"></p></div>
       <form th:action="@{/cart/add}" method="post" class="detail-buy-form" th:if="${!#lists.isEmpty(variants) or product.soLuong > 0}">
@@ -23,6 +27,101 @@
       <div class="detail-benefits"><span><i class="fa-solid fa-truck-fast"></i> Giao hàng nhanh</span><span><i class="fa-solid fa-shield-heart"></i> Đổi trả dễ dàng</span><span><i class="fa-solid fa-lock"></i> Thanh toán an toàn</span></div>
     </section>
   </div>
+
+  <!-- Reviews & Ratings Section -->
+  <section class="review-section-card p-4 mt-4" style="border-radius: 19px; background: #17171f; border: 1px solid #2c2c38; box-shadow: 0 20px 44px rgba(0,0,0,.3); color: #f4f4f8;">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4" style="border-color: #2c2c38 !important;">
+      <div>
+        <h3 class="h4 fw-bold mb-1" style="color: #f4f4f8;"><i class="fa-solid fa-comments me-2" style="color: #a78bfa;"></i>Đánh giá & Nhận xét</h3>
+        <div class="d-flex align-items-center" style="gap: 8px;">
+          <span class="fs-4 fw-bold" style="color: #fbbf24;"><i class="fa-solid fa-star"></i> <span th:text="${avgRating}">5.0</span>/5</span>
+          <span style="color: #94a3b8; font-size: 13px;" th:text="'(' + ${reviewCount} + ' lượt đánh giá)'"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="alert d-flex align-items-center mb-4" style="background: rgba(16,185,129,.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,.28); border-radius: 10px;" role="alert">
+      <i class="fa-solid fa-circle-check me-2"></i><span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert d-flex align-items-center mb-4" style="background: rgba(244,63,94,.12); color: #fda4af; border: 1px solid rgba(244,63,94,.28); border-radius: 10px;" role="alert">
+      <i class="fa-solid fa-triangle-exclamation me-2"></i><span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Add Review Form -->
+    <div class="p-4 mb-4 rounded-3" style="background: #111119; border: 1px solid #2c2c38; border-radius: 14px;">
+      <h5 class="fw-bold mb-3" style="color: #f4f4f8;"><i class="fa-solid fa-pen-to-square me-2" style="color: #a78bfa;"></i>Viết nhận xét của bạn</h5>
+      
+      <!-- Chưa đăng nhập -->
+      <div th:if="${session.user == null}">
+        <p style="color: #94a3b8; margin-bottom: 12px;">Vui lòng đăng nhập để viết đánh giá cho sản phẩm này.</p>
+        <a th:href="@{/login(redirect='/san-pham/' + ${product.id})}" class="btn btn-sm" style="background: #7c3aed; color: #fff; border: 1px solid #8b5cf6; border-radius: 8px; font-weight: 600; padding: 8px 16px;">
+          <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>Đăng nhập ngay
+        </a>
+      </div>
+
+      <!-- Đã đăng nhập nhưng chưa có đơn mua tại cửa hàng -->
+      <div th:if="${session.user != null and !hasPurchased}" class="p-3 rounded-3" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25);">
+        <div class="d-flex align-items-center mb-1" style="color: #fbbf24;">
+          <i class="fa-solid fa-triangle-exclamation me-2 fs-5"></i>
+          <strong style="color: #fde68a;">Chỉ người mua mới có thể đánh giá</strong>
+        </div>
+        <p class="small mb-0" style="color: #cbd5e1;">Bạn chỉ có thể gửi đánh giá và chấm sao sau khi đã có đơn mua sản phẩm này tại cửa hàng HATS.VN.</p>
+      </div>
+
+      <!-- Đã có đơn mua tại cửa hàng -->
+      <div th:if="${session.user != null and hasPurchased}">
+        <div class="d-flex align-items-center gap-2 mb-3 small fw-semibold" style="color: #6ee7b7; background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.2); border-radius: 8px; padding: 8px 12px; width: fit-content;">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Xác thực: Bạn đã có đơn mua sản phẩm này tại cửa hàng HATS.VN</span>
+        </div>
+        <form th:action="@{/san-pham/{id}/review(id=${product.id})}" method="post">
+          <div class="mb-3">
+            <label class="form-label fw-bold small" style="color: #cbd5e1;">Chọn mức độ hài lòng:</label>
+            <div class="d-flex gap-3 flex-wrap">
+              <label class="form-check-label" style="color: #f1f1f5; cursor: pointer;"><input type="radio" name="soSao" value="5" checked class="me-1" style="accent-color: #8b5cf6;"> ⭐⭐⭐⭐⭐ (5 sao)</label>
+              <label class="form-check-label" style="color: #f1f1f5; cursor: pointer;"><input type="radio" name="soSao" value="4" class="me-1" style="accent-color: #8b5cf6;"> ⭐⭐⭐⭐ (4 sao)</label>
+              <label class="form-check-label" style="color: #f1f1f5; cursor: pointer;"><input type="radio" name="soSao" value="3" class="me-1" style="accent-color: #8b5cf6;"> ⭐⭐⭐ (3 sao)</label>
+              <label class="form-check-label" style="color: #f1f1f5; cursor: pointer;"><input type="radio" name="soSao" value="2" class="me-1" style="accent-color: #8b5cf6;"> ⭐⭐ (2 sao)</label>
+              <label class="form-check-label" style="color: #f1f1f5; cursor: pointer;"><input type="radio" name="soSao" value="1" class="me-1" style="accent-color: #8b5cf6;"> ⭐ (1 sao)</label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="noiDungReview" class="form-label fw-bold small" style="color: #cbd5e1;">Cảm nhận chi tiết:</label>
+            <textarea name="noiDung" id="noiDungReview" class="form-control" rows="3" required placeholder="Chia sẻ cảm nhận về chất lượng vải, form mũ, độ hoàn thiện hoặc tốc độ giao hàng..." style="background: #17171f; border: 1px solid #3b3b48; color: #ededf3; border-radius: 10px;"></textarea>
+          </div>
+          <button type="submit" class="btn px-4 fw-bold" style="background: #7c3aed; border: 1px solid #8b5cf6; color: #fff; border-radius: 10px; padding: 10px 24px; box-shadow: 0 8px 20px rgba(124,58,237,.25);">
+            <i class="fa-solid fa-paper-plane me-1"></i>Gửi đánh giá
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="reviews-list">
+      <div th:if="${#lists.isEmpty(reviews)}" class="text-center py-5" style="color: #94a3b8;">
+        <i class="fa-regular fa-comment-dots fs-1 mb-2 d-block" style="color: #a78bfa;"></i>
+        Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên trải nghiệm và để lại nhận xét!
+      </div>
+      <div th:each="rev : ${reviews}" class="py-3" style="border-bottom: 1px solid #282836;">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <span class="badge rounded-circle px-2 py-1" style="background: #2a2a38; color: #c4b5fd;"><i class="fa-regular fa-user"></i></span>
+            <strong style="color: #f4f4f8;" th:text="${rev.khachHang != null ? rev.khachHang.hoTen : 'Khách hàng'}">Khách hàng</strong>
+            <span class="badge" style="background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,.3); font-size: 10px; padding: 3px 8px; border-radius: 6px;">
+              <i class="fa-solid fa-circle-check me-1"></i>Đã mua hàng
+            </span>
+            <span class="text-warning">
+              <i th:each="i : ${#numbers.sequence(1, rev.soSao)}" class="fa-solid fa-star"></i>
+              <i th:if="${rev.soSao < 5}" th:each="i : ${#numbers.sequence(rev.soSao + 1, 5)}" class="fa-regular fa-star" style="color: #4b4b5e;"></i>
+            </span>
+          </div>
+          <small style="color: #94a3b8;" th:text="${#temporals.format(rev.ngayTao, 'dd/MM/yyyy HH:mm')}"></small>
+        </div>
+        <p class="mb-0" style="white-space: pre-line; color: #cbd5e1; font-size: 14px; line-height: 1.6;" th:text="${rev.noiDung}"></p>
+      </div>
+    </div>
+  </section>
 </main>
 <div th:replace="~{fragments/footer :: footer}"></div>
 <script>

@@ -12,7 +12,18 @@
   <div class="order-toast error" th:if="${errorMessage}" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><span th:text="${errorMessage}"></span><button type="button" aria-label="Đóng">&times;</button></div>
   <div class="order-detail-grid">
     <section class="order-detail-card products-card">
-      <header class="order-card-heading"><div><h1><i class="fa-solid fa-basket-shopping"></i> Sản phẩm đã mua</h1><p th:text="${#temporals.format(order.ngayDat, 'dd/MM/yyyy · HH:mm')}"></p></div><span class="order-id" th:text="'#' + ${order.id}"></span></header>
+      <header class="order-card-heading">
+        <div>
+          <h1><i class="fa-solid fa-basket-shopping"></i> Sản phẩm đã mua</h1>
+          <p th:text="${#temporals.format(order.ngayDat, 'dd/MM/yyyy · HH:mm')}"></p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a th:href="@{/admin/orders/{id}/invoice(id=${order.id})}" target="_blank" style="display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid #4f46e5; color: #4f46e5; background: #fff;">
+            <i class="fa-solid fa-print"></i> In hóa đơn
+          </a>
+          <span class="order-id" th:text="'#' + ${order.id}"></span>
+        </div>
+      </header>
       <div class="order-items-table"><table><thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>Số lượng</th><th>Thành tiền</th></tr></thead><tbody>
         <tr th:each="det : ${details}"><td><div class="order-product"><img th:src="${det.sanPham != null and det.sanPham.anhUrl != null ? (det.sanPham.anhUrl.startsWith('http') ? det.sanPham.anhUrl : '/uploads/' + det.sanPham.anhUrl) : '/images/hat-placeholder.svg'}" th:alt="${det.sanPham != null ? det.sanPham.tenSanPham : 'Sản phẩm không xác định'}" onerror="this.onerror=null;this.src='/images/hat-placeholder.svg'"><div><a th:if="${det.sanPham != null}" th:href="@{/san-pham/{id}(id=${det.sanPham.id})}" th:text="${det.sanPham.tenSanPham != null and #strings.length(det.sanPham.tenSanPham) > 2 ? det.sanPham.tenSanPham : 'Sản phẩm không xác định'}"></a><strong th:if="${det.sanPham == null}">Sản phẩm không xác định</strong><small th:if="${det.bienThe != null}" th:text="${det.bienThe.mauSac + ' / ' + det.bienThe.kichCo}"></small><small th:if="${det.sanPham != null and det.sanPham.thuongHieu != null}" th:text="'Hãng: ' + ${det.sanPham.thuongHieu.tenThuongHieu}"></small></div></div></td><td data-label="Đơn giá" th:text="${#numbers.formatDecimal(det.giaBan,0,'COMMA',0,'POINT')} + ' ₫'"></td><td data-label="Số lượng"><span class="quantity-pill" th:text="${det.soLuong}"></span></td><td data-label="Thành tiền" class="line-total" th:text="${#numbers.formatDecimal(det.giaBan * det.soLuong,0,'COMMA',0,'POINT')} + ' ₫'"></td></tr>
       </tbody></table></div>
@@ -20,17 +31,180 @@
     </section>
     <aside class="order-sidebar">
       <section class="order-detail-card recipient-card"><h2><i class="fa-solid fa-truck-ramp-box"></i> Người nhận hàng</h2><dl><div><dt><i class="fa-regular fa-user"></i> Họ tên</dt><dd th:text="${order.hoTenNhan}"></dd></div><div><dt><i class="fa-solid fa-phone"></i> Số điện thoại</dt><dd th:text="${order.soDienThoaiNhan}"></dd></div><div><dt><i class="fa-solid fa-location-dot"></i> Địa chỉ</dt><dd th:text="${order.diaChiNhan}"></dd></div><div><dt><i class="fa-regular fa-note-sticky"></i> Ghi chú</dt><dd th:text="${order.ghiChu != null and !order.ghiChu.isBlank() ? order.ghiChu : 'Không có ghi chú.'}"></dd></div></dl></section>
-      <section class="order-detail-card status-card"><h2><i class="fa-solid fa-arrows-spin"></i> Trạng thái đơn hàng</h2><p class="status-label">Trạng thái hiện tại</p><span class="order-status" th:classappend="${' status-' + #strings.toLowerCase(order.trangThai)}" th:text="${order.trangThai == 'PENDING' ? 'Chờ xử lý' : order.trangThai == 'CONFIRMED' ? 'Đã xác nhận' : order.trangThai == 'SHIPPING' ? 'Đang giao' : order.trangThai == 'DELIVERED' ? 'Đã giao' : 'Đã hủy'}"></span>
-        <form id="statusForm" th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post"><label for="trangThaiSelect">Cập nhật trạng thái mới</label><select name="trangThai" id="trangThaiSelect"><option value="PENDING" th:selected="${order.trangThai == 'PENDING'}">Chờ xử lý</option><option value="CONFIRMED" th:selected="${order.trangThai == 'CONFIRMED'}">Xác nhận đơn</option><option value="SHIPPING" th:selected="${order.trangThai == 'SHIPPING'}">Đang giao hàng</option><option value="DELIVERED" th:selected="${order.trangThai == 'DELIVERED'}">Đã hoàn thành</option><option value="CANCELLED" th:selected="${order.trangThai == 'CANCELLED'}">Hủy đơn hàng</option></select><button type="submit" id="saveStatus"><i class="fa-solid fa-floppy-disk"></i><span>Lưu trạng thái</span></button></form>
-        <p class="status-warning"><i class="fa-solid fa-triangle-exclamation"></i> Chuyển sang <b>Hủy</b> hoặc khôi phục từ Hủy sẽ tự động cập nhật tồn kho tương ứng.</p>
+      <section class="order-detail-card status-card">
+        <h2><i class="fa-solid fa-arrows-spin"></i> Tiến trình đơn hàng</h2>
+        
+        <!-- Order Progress Stepper -->
+        <div class="mb-3" style="font-size: 13px;">
+          <div th:if="${order.trangThai != 'CANCELLED'}" class="d-flex justify-content-between text-center position-relative my-3">
+            <div class="stepper-step" th:classappend="${order.trangThai == 'PENDING' or order.trangThai == 'CONFIRMED' or order.trangThai == 'SHIPPING' or order.trangThai == 'DELIVERED'} ? 'text-primary fw-bold' : 'text-muted'">
+              <i class="fa-solid fa-file-invoice mb-1 d-block fs-5"></i>
+              <span>Đặt hàng</span>
+            </div>
+            <div class="stepper-step" th:classappend="${order.trangThai == 'CONFIRMED' or order.trangThai == 'SHIPPING' or order.trangThai == 'DELIVERED'} ? 'text-primary fw-bold' : 'text-muted'">
+              <i class="fa-solid fa-clipboard-check mb-1 d-block fs-5"></i>
+              <span>Xác nhận</span>
+            </div>
+            <div class="stepper-step" th:classappend="${order.trangThai == 'SHIPPING' or order.trangThai == 'DELIVERED'} ? 'text-primary fw-bold' : 'text-muted'">
+              <i class="fa-solid fa-truck-fast mb-1 d-block fs-5"></i>
+              <span>Đang giao</span>
+            </div>
+            <div class="stepper-step" th:classappend="${order.trangThai == 'DELIVERED'} ? 'text-success fw-bold' : 'text-muted'">
+              <i class="fa-solid fa-circle-check mb-1 d-block fs-5"></i>
+              <span>Hoàn tất</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="status-label">Trạng thái hiện tại</p>
+        <span class="order-status mb-3 d-inline-block" th:classappend="${' status-' + #strings.toLowerCase(order.trangThai)}" th:text="${order.trangThai == 'PENDING' ? 'Chờ xử lý' : order.trangThai == 'CONFIRMED' ? 'Đã xác nhận' : order.trangThai == 'SHIPPING' ? 'Đang giao' : order.trangThai == 'DELIVERED' ? 'Đã hoàn thành' : 'Đã hủy'}"></span>
+
+        <!-- Contextual Action Buttons -->
+        <div th:if="${order.trangThai == 'PENDING'}" class="d-flex flex-column gap-2 mt-2">
+          <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">
+            <input type="hidden" name="trangThai" value="CONFIRMED">
+            <button type="submit" style="width: 100%; padding: 10px; border: none; background: #0d6efd; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">
+              <i class="fa-solid fa-check me-1"></i>Xác nhận đơn hàng
+            </button>
+          </form>
+          <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">
+            <input type="hidden" name="trangThai" value="CANCELLED">
+            <button type="button" onclick="confirmCancelOrder(this, 'Hủy đơn hàng sẽ tự động hoàn trả tồn kho về hệ thống.')" style="width: 100%; padding: 8px; border: 1px solid #dc3545; background: transparent; color: #dc3545; border-radius: 6px; cursor: pointer; font-weight: 500;">
+              <i class="fa-solid fa-ban me-1"></i>Hủy đơn hàng
+            </button>
+          </form>
+        </div>
+
+        <div th:if="${order.trangThai == 'CONFIRMED'}" class="d-flex flex-column gap-2 mt-2">
+          <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">
+            <input type="hidden" name="trangThai" value="SHIPPING">
+            <button type="submit" style="width: 100%; padding: 10px; border: none; background: #0dcaf0; color: #000; border-radius: 6px; cursor: pointer; font-weight: 600;">
+              <i class="fa-solid fa-truck-fast me-1"></i>Giao cho vận chuyển
+            </button>
+          </form>
+          <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">
+            <input type="hidden" name="trangThai" value="CANCELLED">
+            <button type="button" onclick="confirmCancelOrder(this, 'Hủy đơn hàng sẽ hoàn lại tồn kho.')" style="width: 100%; padding: 8px; border: 1px solid #dc3545; background: transparent; color: #dc3545; border-radius: 6px; cursor: pointer; font-weight: 500;">
+              <i class="fa-solid fa-ban me-1"></i>Hủy đơn hàng
+            </button>
+          </form>
+        </div>
+
+        <div th:if="${order.trangThai == 'SHIPPING'}" class="d-flex flex-column gap-2 mt-2">
+          <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">
+            <input type="hidden" name="trangThai" value="DELIVERED">
+            <button type="button" onclick="confirmDelivered(this)" style="width: 100%; padding: 10px; border: none; background: #198754; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">
+              <i class="fa-solid fa-circle-check me-1"></i>Xác nhận giao thành công
+            </button>
+          </form>
+          <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">
+            <input type="hidden" name="trangThai" value="CANCELLED">
+            <button type="button" onclick="confirmCancelOrder(this, 'Giao hàng thất bại sẽ hoàn trả sản phẩm về kho.')" style="width: 100%; padding: 8px; border: 1px solid #dc3545; background: transparent; color: #dc3545; border-radius: 6px; cursor: pointer; font-weight: 500;">
+              <i class="fa-solid fa-rotate-left me-1"></i>Giao thất bại / Hoàn kho
+            </button>
+          </form>
+        </div>
+
+        <div th:if="${order.trangThai == 'DELIVERED'}" class="p-3 bg-light border border-success rounded-3 mt-2 text-success">
+          <div class="fw-bold"><i class="fa-solid fa-circle-check me-1"></i>Đơn hàng đã hoàn thành</div>
+          <small class="text-muted">Đơn hàng đã được giao và thanh toán tất toán. Trạng thái đã được cố định.</small>
+        </div>
+
+        <div th:if="${order.trangThai == 'CANCELLED'}" class="p-3 bg-light border border-danger rounded-3 mt-2 text-danger">
+          <div class="fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i>Đơn hàng đã hủy</div>
+          <small class="text-muted">Đơn hàng đã hủy. Toàn bộ số lượng tồn kho đã được hoàn lại đầy đủ.</small>
+        </div>
+      </section>
+      <section class="order-detail-card payment-card" style="margin-top: 1rem;">
+        <h2><i class="fa-solid fa-credit-card"></i> Thanh toán</h2>
+        <dl>
+          <div><dt><i class="fa-solid fa-wallet"></i> Phương thức</dt><dd th:text="${order.phuongThucThanhToan == 'VNPAY' ? 'Cổng điện tử VNPAY' : (order.phuongThucThanhToan == 'VIETQR' ? 'Chuyển khoản VietQR (Napas247)' : 'Thanh toán tiền mặt (COD)')}"></dd></div>
+          <div><dt><i class="fa-solid fa-circle-check"></i> Trạng thái</dt><dd><span class="badge" th:classappend="${order.trangThaiThanhToan == 'PAID' ? 'bg-success text-white' : 'bg-warning text-dark'}" th:text="${order.trangThaiThanhToan == 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}"></span></dd></div>
+          <div th:if="${order.maGiaoDich != null}"><dt><i class="fa-solid fa-receipt"></i> Mã giao dịch</dt><dd class="font-monospace text-primary fw-bold" th:text="${order.maGiaoDich}"></dd></div>
+          <div th:if="${order.ngayThanhToan != null}"><dt><i class="fa-regular fa-clock"></i> Thời gian thanh toán</dt><dd th:text="${#temporals.format(order.ngayThanhToan, 'dd/MM/yyyy HH:mm:ss')}"></dd></div>
+        </dl>
+        <div th:if="${order.trangThaiThanhToan != 'PAID' and order.trangThai != 'CANCELLED'}" style="margin-top: 10px;">
+          <form th:action="@{/admin/orders/{id}/payment-status(id=${order.id})}" method="post">
+            <input type="hidden" name="trangThaiThanhToan" value="PAID">
+            <button type="button" onclick="confirmPaymentStatus(this)" style="width: 100%; padding: 8px; border: none; background: #198754; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;">
+              <i class="fa-solid fa-check me-1"></i>Đánh dấu Đã thanh toán
+            </button>
+          </form>
+        </div>
+        <div th:if="${vietQrUrl != null and order.trangThaiThanhToan != 'PAID'}" style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ddd;">
+          <small style="color: #666; display: block; margin-bottom: 6px;">Mã QR chuyển khoản:</small>
+          <img th:src="${vietQrUrl}" alt="VietQR" style="max-width: 150px; border-radius: 6px; border: 1px solid #eee;">
+        </div>
       </section>
     </aside>
   </div>
 </main>
 <div th:replace="~{fragments/footer :: footer}"></div>
 <script>
-document.querySelectorAll('.order-toast button').forEach(b=>b.onclick=()=>b.parentElement.remove());
-setTimeout(()=>document.querySelector('.order-toast.success')?.remove(),4000);
-document.getElementById('statusForm').addEventListener('submit',e=>{const select=document.getElementById('trangThaiSelect');if(select.value==='CANCELLED'&&!confirm('Hủy đơn sẽ hoàn trả tồn kho. Bạn có chắc chắn muốn tiếp tục?')){e.preventDefault();return}const button=document.getElementById('saveStatus');button.disabled=true;button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i><span>Đang lưu...</span>'});
+function confirmDelivered(btn) {
+    const form = btn.closest('form');
+    Swal.fire({
+        title: 'Xác nhận giao thành công?',
+        text: 'Khách hàng đã nhận được hàng và thanh toán? Đơn hàng sẽ hoàn tất.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Giao thành công',
+        cancelButtonText: 'Hủy bỏ',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Đang xử lý...';
+            form.submit();
+        }
+    });
+}
+
+function confirmCancelOrder(btn, msg) {
+    const form = btn.closest('form');
+    Swal.fire({
+        title: 'Hủy đơn hàng?',
+        text: msg || 'Hủy đơn hàng sẽ tự động hoàn trả tồn kho về hệ thống.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Hủy đơn',
+        cancelButtonText: 'Đóng lại',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Đang xử lý...';
+            form.submit();
+        }
+    });
+}
+
+function confirmPaymentStatus(btn) {
+    const form = btn.closest('form');
+    Swal.fire({
+        title: 'Xác nhận thanh toán?',
+        text: 'Xác nhận bạn đã nhận được tiền thanh toán cho đơn hàng này?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Đã nhận tiền',
+        cancelButtonText: 'Hủy bỏ',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Đang xử lý...';
+            form.submit();
+        }
+    });
+}
+
+document.querySelectorAll('.order-toast button').forEach(b => b.addEventListener('click', () => b.parentElement.remove()));
+setTimeout(() => document.querySelector('.order-toast.success')?.remove(), 5000);
 </script>
 </body></html>

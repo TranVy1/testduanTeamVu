@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/header :: html_head('Thanh toán đơn hàng')}"></head>
-<body class="d-flex flex-column min-vh-100">
+<body class="cart-page checkout-page d-flex flex-column min-vh-100">
     <div th:replace="~{fragments/header :: navbar}"></div>
 
-    <main class="container my-5 flex-grow-1">
+    <main class="container my-5 flex-grow-1 user-page-main">
         <h3 class="fw-bold mb-4"><i class="fa-solid fa-credit-card text-primary me-2"></i>Thanh toán đơn hàng</h3>
 
         <!-- Error feedback alert -->
@@ -20,23 +20,61 @@
                         <h5 class="fw-bold mb-4 border-bottom pb-2 text-primary"><i class="fa-solid fa-truck-ramp-box me-2"></i>Thông tin giao hàng</h5>
                         
                         <div class="mb-3">
-                            <label for="hoTenNhan" class="form-label">Họ và tên người nhận *</label>
-                            <input type="text" name="hoTenNhan" id="hoTenNhan" class="form-control" th:value="${hoTenNhan}" required placeholder="Họ tên người nhận hàng...">
+                            <label for="hoTenNhan" class="form-label fw-semibold">Họ và tên người nhận <span class="text-danger">*</span></label>
+                            <input type="text" name="hoTenNhan" id="hoTenNhan" class="form-control" th:value="${hoTenNhan}" required minlength="2" maxlength="100" pattern="^[\p{L}\s\.\-\']{2,100}$" placeholder="Ví dụ: Nguyễn Văn An">
+                            <div class="form-text text-muted small">Họ tên tối thiểu 2 ký tự, chỉ gồm chữ cái.</div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="soDienThoaiNhan" class="form-label">Số điện thoại liên hệ *</label>
-                            <input type="tel" name="soDienThoaiNhan" id="soDienThoaiNhan" class="form-control" th:value="${soDienThoaiNhan}" required placeholder="Số điện thoại nhận hàng...">
+                            <label for="soDienThoaiNhan" class="form-label fw-semibold">Số điện thoại liên hệ <span class="text-danger">*</span></label>
+                            <input type="tel" name="soDienThoaiNhan" id="soDienThoaiNhan" class="form-control font-monospace" th:value="${soDienThoaiNhan}" required pattern="^0[35789][0-9]{8}$" maxlength="10" placeholder="Ví dụ: 0987654321">
+                            <div class="form-text text-muted small">Số di động 10 chữ số tại Việt Nam (đầu số 03, 05, 07, 08, 09).</div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="diaChiNhan" class="form-label">Địa chỉ nhận hàng *</label>
-                            <textarea name="diaChiNhan" id="diaChiNhan" class="form-control" rows="3" required placeholder="Ghi số nhà, ngõ/ngách, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..." th:text="${diaChiNhan}"></textarea>
+                            <label for="diaChiNhan" class="form-label fw-semibold">Địa chỉ nhận hàng <span class="text-danger">*</span></label>
+                            <textarea name="diaChiNhan" id="diaChiNhan" class="form-control" rows="3" required minlength="8" maxlength="255" placeholder="Ghi rõ số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..." th:text="${diaChiNhan}"></textarea>
+                            <div class="form-text text-muted small">Địa chỉ cụ thể tối thiểu 8 ký tự để bưu tá giao hàng chính xác.</div>
                         </div>
 
                         <div class="mb-0">
-                            <label for="ghiChu" class="form-label">Ghi chú giao hàng</label>
-                            <textarea name="ghiChu" id="ghiChu" class="form-control" rows="2" placeholder="Ghi chú về thời gian giao hàng hoặc yêu cầu thêm..."></textarea>
+                            <label for="ghiChu" class="form-label fw-semibold">Ghi chú giao hàng <span class="text-muted fw-normal">(tùy chọn)</span></label>
+                            <textarea name="ghiChu" id="ghiChu" class="form-control" rows="2" maxlength="500" placeholder="Ghi chú về thời gian nhận hàng hoặc chỉ dẫn giao..."></textarea>
+                        </div>
+                    </div>
+
+
+                    <!-- Payment Method -->
+                    <div class="glass-card p-4 mt-4">
+                        <h5 class="fw-bold mb-3 border-bottom pb-2 text-primary"><i class="fa-solid fa-credit-card me-2"></i>Phương thức thanh toán</h5>
+                        <div class="form-check p-3 rounded-3 mb-2" style="background: #111119; border: 1px solid #2c2c38;">
+                            <input class="form-check-input" type="radio" name="phuongThucThanhToan" id="paymentCod" value="COD" checked style="accent-color: #8b5cf6;">
+                            <label class="form-check-label d-flex justify-content-between align-items-center w-100 cursor-pointer" for="paymentCod">
+                                <div>
+                                    <div class="fw-bold" style="color: #f1f1f5;"><i class="fa-solid fa-money-bill-wave text-success me-2"></i>Thanh toán khi nhận hàng (COD)</div>
+                                    <small class="text-muted">Bạn chỉ thanh toán khi đã nhận và kiểm tra hàng.</small>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-check p-3 rounded-3 mb-2" style="background: #111119; border: 1px solid #2c2c38;">
+                            <input class="form-check-input" type="radio" name="phuongThucThanhToan" id="paymentVietQr" value="VIETQR" style="accent-color: #8b5cf6;">
+                            <label class="form-check-label d-flex justify-content-between align-items-center w-100 cursor-pointer" for="paymentVietQr">
+                                <div>
+                                    <div class="fw-bold" style="color: #f1f1f5;"><i class="fa-solid fa-qrcode text-primary me-2"></i>Chuyển khoản liên ngân hàng VietQR (Napas 247)</div>
+                                    <small class="text-muted">Quét mã QR 24/7 từ ứng dụng ngân hàng bất kỳ (Vietcombank, MBBank, Techcombank, Momo...)</small>
+                                </div>
+                                <span class="badge bg-primary">VietQR</span>
+                            </label>
+                        </div>
+                        <div class="form-check p-3 rounded-3" style="background: #111119; border: 1px solid #2c2c38;">
+                            <input class="form-check-input" type="radio" name="phuongThucThanhToan" id="paymentVnpay" value="VNPAY" style="accent-color: #8b5cf6;">
+                            <label class="form-check-label d-flex justify-content-between align-items-center w-100 cursor-pointer" for="paymentVnpay">
+                                <div>
+                                    <div class="fw-bold" style="color: #f1f1f5;"><i class="fa-solid fa-credit-card text-danger me-2"></i>Cổng thanh toán điện tử VNPAY</div>
+                                    <small class="text-muted">Thanh toán an toàn qua Thẻ ATM nội địa, Internet Banking và ví điện tử VNPAY</small>
+                                </div>
+                                <span class="badge bg-danger">VNPAY</span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -48,16 +86,17 @@
                         
                         <div class="list-group mb-4">
                             <!-- Items List -->
-                            <div th:each="item : ${cartItems}" class="list-group-item bg-transparent border-0 border-bottom d-flex justify-content-between align-items-center py-3 px-0">
+                            <div th:each="item : ${cartItems}" class="list-group-item bg-transparent border-0 border-bottom d-flex justify-content-between align-items-center py-3 px-0" style="border-color: #2c2c38 !important;">
                                 <div class="d-flex align-items-center">
                                     <img th:src="${item.sanPham.anhUrl != null ? (item.sanPham.anhUrl.startsWith('http') ? item.sanPham.anhUrl : '/uploads/' + item.sanPham.anhUrl) : 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=80'}"
-                                         class="rounded-2 me-3" alt="Product Image" style="width: 50px; height: 50px; object-fit: cover;">
+                                         class="rounded-2 me-3" alt="Product Image" style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #363644;">
                                     <div>
-                                        <div class="fw-bold text-dark small" th:text="${item.sanPham.tenSanPham}"></div>
+                                        <div class="fw-bold text-white small" th:text="${item.sanPham.tenSanPham}"></div>
+                                        <div class="text-muted small" th:if="${item.bienThe != null}" th:text="${item.bienThe.mauSac + ' / Size: ' + item.bienThe.kichCo}"></div>
                                         <div class="text-muted small" th:text="'Số lượng: ' + ${item.soLuong}"></div>
                                     </div>
                                 </div>
-                                <span class="fw-bold text-primary small" th:text="${#numbers.formatDecimal(item.sanPham.gia * item.soLuong, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
+                                <span class="fw-bold text-primary small" th:text="${#numbers.formatDecimal(item.donGia * item.soLuong, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
                             </div>
                         </div>
 

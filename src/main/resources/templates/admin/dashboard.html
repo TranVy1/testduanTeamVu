@@ -12,8 +12,18 @@
     <a th:href="@{/admin/orders}" class="admin-tab"><i class="fa-solid fa-receipt"></i><span>Đơn hàng</span></a>
     <a th:href="@{/admin/customers}" class="admin-tab"><i class="fa-regular fa-user"></i><span>Khách hàng</span></a>
     <a th:href="@{/admin/coupons}" class="admin-tab"><i class="fa-solid fa-ticket"></i><span>Mã giảm giá</span></a>
+    <a th:href="@{/admin/chat}" class="admin-tab"><i class="fa-solid fa-comments"></i><span>Tư vấn khách</span></a>
   </nav>
-
+  
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+      <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;"><i class="fa-solid fa-chart-pie" style="color: #4f46e5; margin-right: 8px;"></i>Tổng quan hệ thống</h1>
+      <p style="color: #64748b; font-size: 13px; margin: 0;">Thống kê doanh thu, đơn hàng và phân tích hiệu suất bán lẻ HATS.VN.</p>
+    </div>
+    <a th:href="@{/admin/orders/export-excel}" style="display: inline-flex; align-items: center; gap: 8px; background: #10b981; color: white; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(16,185,129,0.25);">
+      <i class="fa-solid fa-file-excel"></i> Xuất báo cáo Excel
+    </a>
+  </div>
   <section class="row g-3 g-xl-4 mb-4" aria-label="Chỉ số chính">
     <div class="col-md-6"><article class="dashboard-card stat-card h-100">
       <div class="stat-icon icon-violet"><i class="fa-solid fa-wallet"></i></div><div class="stat-content"><p class="stat-label">Tổng doanh thu bán lẻ</p>

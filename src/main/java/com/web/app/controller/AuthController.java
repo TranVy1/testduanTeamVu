@@ -60,7 +60,7 @@ public class AuthController {
                     .orElseThrow(() -> new IllegalArgumentException("Tên đăng nhập hoặc mật khẩu không chính xác!"));
             if (tk.getVaiTro().equalsIgnoreCase("ADMIN")) {
                 session.setAttribute("admin", tk);
-                if (redirect != null && !redirect.isBlank() && redirect.startsWith("/admin")) {
+                if (isSafeRedirect(redirect) && redirect.startsWith("/admin")) {
                     return "redirect:" + redirect;
                 }
                 return "redirect:/admin/dashboard";
@@ -69,14 +69,23 @@ public class AuthController {
                         .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin khách hàng!"));
                 session.setAttribute("user", kh);
                 session.setAttribute("account", tk);
-                if (redirect != null && !redirect.isBlank() && !redirect.contains("/admin")) {
+                if (isSafeRedirect(redirect) && !redirect.startsWith("/admin")) {
                     return "redirect:" + redirect;
                 }
                 return "redirect:/";
             }
         } catch (IllegalArgumentException e) {
-            return "redirect:/login?error=invalid" + (redirect != null ? "&redirect=" + redirect : "");
+            String safeParam = (isSafeRedirect(redirect)) ? "&redirect=" + redirect : "";
+            return "redirect:/login?error=invalid" + safeParam;
         }
+    }
+
+    private boolean isSafeRedirect(String url) {
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+        String trimmed = url.trim();
+        return trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.contains(":") && !trimmed.contains("\\");
     }
 
     @GetMapping("/register")

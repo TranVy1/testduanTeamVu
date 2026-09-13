@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả thanh toán VNPAY - HATS.VN</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --vnpay-blue: #005baa;
+            --vnpay-red: #ed1c24;
+            --vnpay-bg: #f5f7fa;
+        }
+        body {
+            background-color: var(--vnpay-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .vnpay-header {
+            background: #fff;
+            border-bottom: 2px solid #e9ecef;
+            padding: 14px 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .vnpay-logo {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .vnpay-logo .vn { color: var(--vnpay-blue); }
+        .vnpay-logo .pay { color: var(--vnpay-red); }
+        .result-card {
+            max-width: 650px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+        .result-header {
+            padding: 36px 24px 24px;
+            text-align: center;
+            background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .success-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 0 0 8px #f0fdf4;
+        }
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 28px;
+            border-bottom: 1px dashed #f1f5f9;
+            font-size: 14.5px;
+        }
+        .receipt-row:last-child {
+            border-bottom: none;
+        }
+        .receipt-row .label {
+            color: #64748b;
+        }
+        .receipt-row .value {
+            font-weight: 600;
+            color: #1e293b;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="vnpay-header">
+        <div class="container d-flex justify-content-between align-items-center" style="max-width: 1040px;">
+            <div class="d-flex align-items-center gap-3">
+                <a href="#" class="vnpay-logo">
+                    <span class="vn">VN</span><span class="pay">PAY</span>
+                </a>
+                <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill" style="font-size: 12px; background: #e8f5e9;">
+                    <i class="fa-solid fa-shield-halved me-1"></i>Giao dịch bảo mật PCI DSS
+                </span>
+            </div>
+            <div class="text-end text-muted small">
+                Hotline hỗ trợ: <strong class="text-primary">1900 55 55 77</strong>
+            </div>
+        </div>
+    </header>
+
+    <main class="container flex-grow-1 d-flex align-items-center">
+        <div class="result-card w-100">
+            <div class="result-header">
+                <div class="success-icon">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3 class="fw-bold text-success mb-1">Giao dịch thành công!</h3>
+                <p class="text-muted small mb-0">Cảm ơn quý khách đã thanh toán qua Cổng thanh toán điện tử VNPAY.</p>
+            </div>
+
+            <div class="py-3">
+                <div class="receipt-row">
+                    <span class="label">Mã đơn hàng:</span>
+                    <span class="value text-primary" th:text="'#' + ${order.id}">#0</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="label">Số tiền thanh toán:</span>
+                    <span class="value text-danger fs-5" th:text="${#numbers.formatDecimal(order.tongTien, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="label">Mã giao dịch VNPAY:</span>
+                    <span class="value font-monospace" th:text="${vnpTransactionNo != '' ? vnpTransactionNo : order.maGiaoDich}">14892015</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="label">Ngân hàng phát hành:</span>
+                    <span class="value" th:text="${bankCode != null ? bankCode : 'NCB'}">NCB Bank</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="label">Thời gian giao dịch:</span>
+                    <span class="value" th:text="${#temporals.format(order.ngayThanhToan != null ? order.ngayThanhToan : order.ngayDat, 'dd/MM/yyyy HH:mm:ss')}"></span>
+                </div>
+                <div class="receipt-row">
+                    <span class="label">Trạng thái xử lý:</span>
+                    <span class="value text-success"><i class="fa-solid fa-circle-check me-1"></i>Đã tất toán (Code 00)</span>
+                </div>
+            </div>
+
+            <div class="p-4 bg-light border-top text-center">
+                <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                    <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-primary px-4 py-2 fw-semibold">
+                        <i class="fa-solid fa-receipt me-1"></i>Xem chi tiết đơn hàng
+                    </a>
+                    <a th:href="@{/}" class="btn btn-outline-secondary px-4 py-2 fw-semibold">
+                        <i class="fa-solid fa-store me-1"></i>Tiếp tục mua sắm
+                    </a>
+                </div>
+                <div class="text-muted small mt-3">
+                    Hệ thống sẽ tự động cập nhật và xử lý giao đơn hàng tới quý khách trong thời gian sớm nhất.
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
