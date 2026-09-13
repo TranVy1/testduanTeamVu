@@ -1,7 +1,7 @@
 ﻿-- ==========================================================
 -- DATABASE BACKUP / RESTORE SCRIPT: WebsiteBanMu
 -- Há»‡ Thá»‘ng Website BÃ¡n MÅ© Thá»i Trang HATS.VN
--- NgÃ y táº¡o: 2026-09-13 17:02:26
+-- NgÃ y táº¡o: 2026-09-13 17:10:59
 -- ==========================================================
 
 USE master;
@@ -14,6 +14,10 @@ END
 GO
 
 USE [WebsiteBanMu];
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
 GO
 
 -- ----------------------------------------------------------
@@ -338,6 +342,7 @@ EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL';
 GO
 
 -- Data for table: danh_muc (4 rows)
+DELETE FROM [dbo].[danh_muc];
 SET IDENTITY_INSERT [dbo].[danh_muc] ON;
 INSERT INTO [dbo].[danh_muc] ([id], [mo_ta], [ten_danh_muc]) VALUES (1, N'Mũ lưỡi trai phong cách trẻ trung, năng động', N'Mũ Lưỡi Trai');
 INSERT INTO [dbo].[danh_muc] ([id], [mo_ta], [ten_danh_muc]) VALUES (2, N'Mũ Snapback cá tính, đậm chất streetwear', N'Mũ Snapback');
@@ -347,6 +352,7 @@ SET IDENTITY_INSERT [dbo].[danh_muc] OFF;
 GO
 
 -- Data for table: thuong_hieu (5 rows)
+DELETE FROM [dbo].[thuong_hieu];
 SET IDENTITY_INSERT [dbo].[thuong_hieu] ON;
 INSERT INTO [dbo].[thuong_hieu] ([id], [mo_ta], [ten_thuong_hieu]) VALUES (1, N'Thương hiệu thể thao hàng đầu thế giới', N'Nike');
 INSERT INTO [dbo].[thuong_hieu] ([id], [mo_ta], [ten_thuong_hieu]) VALUES (2, N'Thương hiệu phong cách thể thao ba sọc cổ điển', N'Adidas');
@@ -357,12 +363,14 @@ SET IDENTITY_INSERT [dbo].[thuong_hieu] OFF;
 GO
 
 -- Data for table: ma_giam_gia (1 rows)
+DELETE FROM [dbo].[ma_giam_gia];
 SET IDENTITY_INSERT [dbo].[ma_giam_gia] ON;
 INSERT INTO [dbo].[ma_giam_gia] ([id], [gia_tri_giam], [gia_tri_giam_toi_da], [gia_tri_toi_thieu], [loai_giam_gia], [ma_code], [ngay_bat_dau], [ngay_ket_thuc], [so_luong], [so_luong_da_dung], [ten_khuyen_mai], [trang_thai]) VALUES (1, 40, 50000, 300000, N'PERCENTAGE', N'HATS07A37V', '2026-09-13 00:46:00.000', '2029-06-13 00:46:00.000', 15, 0, N'ngon', 1);
 SET IDENTITY_INSERT [dbo].[ma_giam_gia] OFF;
 GO
 
 -- Data for table: tai_khoan (3 rows)
+DELETE FROM [dbo].[tai_khoan];
 SET IDENTITY_INSERT [dbo].[tai_khoan] ON;
 INSERT INTO [dbo].[tai_khoan] ([id], [mat_khau], [ten_dang_nhap], [trang_thai], [vai_tro]) VALUES (1, N'$2a$10$ZFec8V7rfzXioRzUbE/p5uQt/5utCQhvTtVtym2oWtA2s8agMaw9G', N'admin', N'ACTIVE', N'ADMIN');
 INSERT INTO [dbo].[tai_khoan] ([id], [mat_khau], [ten_dang_nhap], [trang_thai], [vai_tro]) VALUES (2, N'$2a$10$13nMLalYKWnqW1iZfVQa5.c9SrQw.SsqqoNJwMA86t4vjpDr8p3k.', N'user', N'ACTIVE', N'USER');
@@ -371,6 +379,7 @@ SET IDENTITY_INSERT [dbo].[tai_khoan] OFF;
 GO
 
 -- Data for table: khach_hang (2 rows)
+DELETE FROM [dbo].[khach_hang];
 SET IDENTITY_INSERT [dbo].[khach_hang] ON;
 INSERT INTO [dbo].[khach_hang] ([id], [dia_chi], [email], [ho_ten], [so_dien_thoai], [tai_khoan_id]) VALUES (1, N'1441/322/ nhân mỹ, mỹ đình', N'user@fpt.com', N'Nguyễn Văn A', N'0987654321', 2);
 INSERT INTO [dbo].[khach_hang] ([id], [dia_chi], [email], [ho_ten], [so_dien_thoai], [tai_khoan_id]) VALUES (2, N'HCM', N'user2@test.com', N'Khach Hang 2', N'0911223344', 3);
@@ -378,6 +387,7 @@ SET IDENTITY_INSERT [dbo].[khach_hang] OFF;
 GO
 
 -- Data for table: gio_hang (2 rows)
+DELETE FROM [dbo].[gio_hang];
 SET IDENTITY_INSERT [dbo].[gio_hang] ON;
 INSERT INTO [dbo].[gio_hang] ([id], [ngay_tao], [khach_hang_id]) VALUES (1, '2026-09-12 23:15:38.949', 1);
 INSERT INTO [dbo].[gio_hang] ([id], [ngay_tao], [khach_hang_id]) VALUES (3, '2026-09-12 23:42:08.712', 2);
@@ -385,18 +395,20 @@ SET IDENTITY_INSERT [dbo].[gio_hang] OFF;
 GO
 
 -- Data for table: san_pham (5 rows)
+DELETE FROM [dbo].[san_pham];
 SET IDENTITY_INSERT [dbo].[san_pham] ON;
-INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (1, N'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600', 350000, N'Mo ta', '2026-09-12 23:07:15.238', 136, N'Mũ Lưỡi Trai Nike Heritage86', 1, 1);
-INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (2, N'https://images.unsplash.com/photo-1534215754734-18e55d13e346?w=600', 380000, N'Thiết kế siêu nhẹ dành cho các hoạt động thể thao ngoài trời như chạy bộ, tennis. Công nghệ chống tia UV bảo vệ da đầu.', '2026-09-12 23:07:15.274', 37, N'Mũ Lưỡi Trai Adidas Superlite', 1, 2);
+INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (1, N'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600', 350000, N'Mo ta', '2026-09-12 23:07:15.238', 131, N'Mũ Lưỡi Trai Nike Heritage86', 1, 1);
+INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (2, N'https://images.unsplash.com/photo-1534215754734-18e55d13e346?w=600', 380000, N'Thiết kế siêu nhẹ dành cho các hoạt động thể thao ngoài trời như chạy bộ, tennis. Công nghệ chống tia UV bảo vệ da đầu.', '2026-09-12 23:07:15.274', 38, N'Mũ Lưỡi Trai Adidas Superlite', 1, 2);
 INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (3, N'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=600', 490000, N'Mũ Snapback NY huyền thoại từ thương hiệu New Era. Phía sau có khấc nhựa điều chỉnh kích thước dễ dàng, phong cách hiphop cực chất.', '2026-09-12 23:07:15.276', 30, N'Mũ Snapback New Era 9FIFTY NY', 2, 4);
 INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (4, N'https://images.unsplash.com/photo-1529958030586-3aae4ca485ff?w=600', 450000, N'Mũ tai bèo (bucket) in họa tiết logo Boston cá tính. Vải kaki dày dặn giữ form tốt, thích hợp cho cả nam và nữ.', '2026-09-12 23:07:15.278', 37, N'Mũ Bucket MLB Boston Red Sox', 3, 3);
-INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (5, N'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=600', 420000, N'Mũ MLB thêu chữ LA nổi bật màu xanh dương thanh lịch. Chất liệu cao cấp, đường chỉ thêu tỉ mỉ chuẩn auth.', '2026-09-12 23:07:15.281', 31, N'Mũ Lưỡi Trai MLB LA Dodgers', 2, 3);
+INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (5, N'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=600', 420000, N'Mũ MLB thêu chữ LA nổi bật màu xanh dương thanh lịch. Chất liệu cao cấp, đường chỉ thêu tỉ mỉ chuẩn auth.', '2026-09-12 23:07:15.281', 32, N'Mũ Lưỡi Trai MLB LA Dodgers', 2, 3);
 SET IDENTITY_INSERT [dbo].[san_pham] OFF;
 GO
 
 -- Data for table: bien_the_san_pham (15 rows)
+DELETE FROM [dbo].[bien_the_san_pham];
 SET IDENTITY_INSERT [dbo].[bien_the_san_pham] ON;
-INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (1, 233232, N'M', N'Đen', N'MLB-LAD-M', 9, 5);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (1, 233232, N'M', N'Đen', N'MLB-LAD-M', 10, 5);
 INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (2, 350000, N'M', N'Đen', N'NIKE-BLK-M', 98, 1);
 INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (3, 360000, N'L', N'Trắng', N'NIKE-WHT-L', 13, 1);
 INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (5, 370000, N'XL', N'Xanh Navy', N'NIKE-NVY-XL', 25, 1);
@@ -414,7 +426,8 @@ INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku],
 SET IDENTITY_INSERT [dbo].[bien_the_san_pham] OFF;
 GO
 
--- Data for table: don_hang (66 rows)
+-- Data for table: don_hang (67 rows)
+DELETE FROM [dbo].[don_hang];
 SET IDENTITY_INSERT [dbo].[don_hang] ON;
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (1, N'123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh', N'', N'Nguyễn Văn A', '2026-09-12 23:16:41.179', N'0987654321', 0, 2798784, N'PENDING', 1, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (2, N'123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh', N'', N'Nguyễn Văn A', '2026-09-12 23:18:36.416', N'0987654321', 0, 5040000, N'CANCELLED', 1, NULL, NULL, NULL, NULL, NULL);
@@ -444,7 +457,7 @@ INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [n
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (26, N'456 Tran Hung Dao, Q1, TP.HCM', N'Thanh toan VNPAY', N'Nguyen Van VNPAY', '2026-09-13 00:27:27.359', N'0987654321', 0, 350000, N'CONFIRMED', 1, NULL, N'VNPAY', N'PAID', NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (27, N'123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh', N'', N'Nguyễn Văn A', '2026-09-13 00:33:53.770', N'0987654321', 0, 233232, N'PENDING', 1, NULL, N'COD', N'UNPAID', NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (28, N'123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh', N'', N'Nguyễn Văn A', '2026-09-13 00:34:18.682', N'0987654321', 0, 233232, N'SHIPPING', 1, NULL, N'VIETQR', N'PAID', NULL, NULL);
-INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (29, N'123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh', N'', N'Nguyễn Văn A', '2026-09-13 00:48:01.691', N'0987654321', 0, 233232, N'PENDING', 1, NULL, N'VNPAY', N'UNPAID', NULL, NULL);
+INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (29, N'123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh', N'', N'Nguyễn Văn A', '2026-09-13 00:48:01.691', N'0987654321', 0, 233232, N'CANCELLED', 1, NULL, N'VNPAY', N'UNPAID', NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (30, N'123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh', N'', N'Nguyễn Văn A', '2026-09-13 00:48:24.253', N'0987654321', 0, 233232, N'CONFIRMED', 1, NULL, N'VIETQR', N'PAID', NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (31, N'456 Tran Phu, Da Nang', N'Giao gio hanh chinh', N'Nguyen Van Test', '2026-09-13 00:59:02.913', N'0912345678', 0, 350000, N'CONFIRMED', 1, NULL, N'VIETQR', N'PAID', N'FT235943116', '2026-09-13 00:59:03.116');
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (32, N'456 Tran Phu, Da Nang', N'Giao gio hanh chinh', N'Nguyen Van Test', '2026-09-13 00:59:10.763', N'0912345678', 0, 350000, N'CONFIRMED', 1, NULL, N'VIETQR', N'PAID', N'FT235950872', '2026-09-13 00:59:10.872');
@@ -452,12 +465,12 @@ INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [n
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (34, N'789 Le Duan, Ha Noi', N'COD test', N'Nguyen Van COD', '2026-09-13 00:59:26.623', N'0987654321', 0, 350000, N'DELIVERED', 1, NULL, N'COD', N'PAID', N'COD-DLV-34', '2026-09-13 00:59:26.945');
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (35, N'123 Cancel St', N'Test cancel', N'Nguyen Van Cancel', '2026-09-13 00:59:27.113', N'0987654321', 0, 700000, N'CANCELLED', 1, NULL, N'COD', N'UNPAID', NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (36, N'123 Pho Hue, Hai Ba Trung, Ha Noi', NULL, N'Nguyen Van Kiem Thu', '2026-09-13 01:06:19.354', N'0912345678', 0, 350000, N'CONFIRMED', 1, NULL, N'VIETQR', N'PAID', N'FT236379506', '2026-09-13 01:06:19.507');
-INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (37, N'456 Tran Hung Dao, Quan 1, TP. HCM', NULL, N'Tran Thi VNPAY', '2026-09-13 01:06:19.690', N'0988776655', 0, 380000, N'PENDING', 1, NULL, N'VNPAY', N'UNPAID', NULL, NULL);
+INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (37, N'456 Tran Hung Dao, Quan 1, TP. HCM', NULL, N'Tran Thi VNPAY', '2026-09-13 01:06:19.690', N'0988776655', 0, 380000, N'CANCELLED', 1, NULL, N'VNPAY', N'UNPAID', NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (38, N'123 Pho Hue, Hai Ba Trung, Ha Noi', NULL, N'Nguyen Van Kiem Thu', '2026-09-13 01:06:36.602', N'0912345678', 0, 350000, N'CONFIRMED', 1, NULL, N'VIETQR', N'PAID', N'FT236396710', '2026-09-13 01:06:36.710');
-INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (39, N'456 Tran Hung Dao, Quan 1, TP. HCM', NULL, N'Tran Thi VNPAY', '2026-09-13 01:06:36.832', N'0988776655', 0, 380000, N'PENDING', 1, NULL, N'VNPAY', N'UNPAID', NULL, NULL);
+INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (39, N'456 Tran Hung Dao, Quan 1, TP. HCM', NULL, N'Tran Thi VNPAY', '2026-09-13 01:06:36.832', N'0988776655', 0, 380000, N'CANCELLED', 1, NULL, N'VNPAY', N'UNPAID', NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (40, N'123 Pho Hue, Hai Ba Trung, Ha Noi', NULL, N'Nguyen Van Kiem Thu', '2026-09-13 01:07:17.012', N'0912345678', 0, 350000, N'CONFIRMED', 1, NULL, N'VIETQR', N'PAID', N'FT236437186', '2026-09-13 01:07:17.186');
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (41, N'456 Tran Hung Dao, Quan 1, TP. HCM', NULL, N'Tran Thi VNPAY', '2026-09-13 01:07:17.348', N'0988776655', 0, 380000, N'CONFIRMED', 1, NULL, N'VNPAY', N'PAID', N'VNP14437446', '2026-09-13 01:07:17.446');
-INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (42, N'So 1 Dai Co Viet, Ha Noi', N'Giao buoi chieu', N'Nguyen Van Test', '2026-09-13 01:07:22.325', N'0988776655', 0, 700000, N'PENDING', 1, NULL, N'COD', N'UNPAID', NULL, NULL);
+INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (42, N'So 1 Dai Co Viet, Ha Noi', N'Giao buoi chieu', N'Nguyen Van Test', '2026-09-13 01:07:22.325', N'0988776655', 0, 700000, N'CANCELLED', 1, NULL, N'COD', N'UNPAID', NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (43, N'123 Đường Test, Hà Nội', N'Thanh toán QR', N'Khách Hàng VietQR', '2026-09-13 01:07:23.074', N'0988776655', 0, 350000, N'PENDING', 2, NULL, N'VIETQR', N'UNPAID', NULL, NULL);
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (44, N'789 Le Duan, Ha Noi', N'COD test', N'Nguyen Van COD', '2026-09-13 01:07:35.689', N'0987654321', 0, 350000, N'DELIVERED', 1, NULL, N'COD', N'PAID', N'COD-DLV-44', '2026-09-13 01:07:35.996');
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (45, N'123 Cancel St', N'Test cancel', N'Nguyen Van Cancel', '2026-09-13 01:07:36.141', N'0987654321', 0, 700000, N'CANCELLED', 1, NULL, N'COD', N'UNPAID', NULL, NULL);
@@ -482,10 +495,12 @@ INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [n
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (64, N'456 Tran Hung Dao, Quan 1, TP. HCM', NULL, N'Tran Thi VNPAY', '2026-09-13 01:42:26.811', N'0988776655', 0, 380000, N'CONFIRMED', 1, NULL, N'VNPAY', N'PAID', N'VNP14546889', '2026-09-13 01:42:26.889');
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (65, N'789 Le Duan, Ha Noi', N'COD test', N'Nguyen Van COD', '2026-09-13 01:42:31.384', N'0987654321', 0, 350000, N'DELIVERED', 1, NULL, N'COD', N'PAID', N'COD-DLV-65', '2026-09-13 01:42:31.689');
 INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (66, N'123 Cancel St', N'Test cancel', N'Nguyen Van Cancel', '2026-09-13 01:42:31.908', N'0987654321', 0, 700000, N'CANCELLED', 1, NULL, N'COD', N'UNPAID', NULL, NULL);
+INSERT INTO [dbo].[don_hang] ([id], [dia_chi_nhan], [ghi_chu], [ho_ten_nhan], [ngay_dat], [so_dien_thoai_nhan], [so_tien_giam], [tong_tien], [trang_thai], [khach_hang_id], [khuyen_mai_id], [phuong_thuc_thanh_toan], [trang_thai_thanh_toan], [ma_giao_dich], [ngay_thanh_toan]) VALUES (67, N'1441/322/ nhân mỹ, mỹ đình', N'', N'Nguyễn Văn A', '2026-09-13 17:07:53.046', N'0987654321', 0, 1750000, N'CONFIRMED', 1, NULL, N'VNPAY', N'PAID', N'VNP1492200', '2026-09-13 17:08:12.200');
 SET IDENTITY_INSERT [dbo].[don_hang] OFF;
 GO
 
--- Data for table: chi_tiet_don_hang (68 rows)
+-- Data for table: chi_tiet_don_hang (69 rows)
+DELETE FROM [dbo].[chi_tiet_don_hang];
 SET IDENTITY_INSERT [dbo].[chi_tiet_don_hang] ON;
 INSERT INTO [dbo].[chi_tiet_don_hang] ([id], [gia_ban], [so_luong], [bien_the_id], [don_hang_id], [san_pham_id]) VALUES (1, 233232, 12, 1, 1, 5);
 INSERT INTO [dbo].[chi_tiet_don_hang] ([id], [gia_ban], [so_luong], [bien_the_id], [don_hang_id], [san_pham_id]) VALUES (2, 420000, 12, NULL, 2, 5);
@@ -555,10 +570,12 @@ INSERT INTO [dbo].[chi_tiet_don_hang] ([id], [gia_ban], [so_luong], [bien_the_id
 INSERT INTO [dbo].[chi_tiet_don_hang] ([id], [gia_ban], [so_luong], [bien_the_id], [don_hang_id], [san_pham_id]) VALUES (66, 380000, 1, NULL, 64, 2);
 INSERT INTO [dbo].[chi_tiet_don_hang] ([id], [gia_ban], [so_luong], [bien_the_id], [don_hang_id], [san_pham_id]) VALUES (67, 350000, 1, NULL, 65, 1);
 INSERT INTO [dbo].[chi_tiet_don_hang] ([id], [gia_ban], [so_luong], [bien_the_id], [don_hang_id], [san_pham_id]) VALUES (68, 350000, 2, NULL, 66, 1);
+INSERT INTO [dbo].[chi_tiet_don_hang] ([id], [gia_ban], [so_luong], [bien_the_id], [don_hang_id], [san_pham_id]) VALUES (69, 350000, 5, NULL, 67, 1);
 SET IDENTITY_INSERT [dbo].[chi_tiet_don_hang] OFF;
 GO
 
 -- Data for table: danh_gia_san_pham (7 rows)
+DELETE FROM [dbo].[danh_gia_san_pham];
 SET IDENTITY_INSERT [dbo].[danh_gia_san_pham] ON;
 INSERT INTO [dbo].[danh_gia_san_pham] ([id], [ngay_tao], [noi_dung], [so_sao], [khach_hang_id], [san_pham_id]) VALUES (1, '2026-09-12 23:41:41.659', N'Mũ rất đẹp, vải dày dặn, form chuẩn! Đánh giá 5 sao cho shop.', 5, 2, 1);
 INSERT INTO [dbo].[danh_gia_san_pham] ([id], [ngay_tao], [noi_dung], [so_sao], [khach_hang_id], [san_pham_id]) VALUES (2, '2026-09-12 23:42:08.831', N'Mũ rất đẹp, vải dày dặn, form chuẩn! Đánh giá 5 sao cho shop.', 5, 2, 1);
@@ -571,6 +588,7 @@ SET IDENTITY_INSERT [dbo].[danh_gia_san_pham] OFF;
 GO
 
 -- Data for table: tin_nhan (27 rows)
+DELETE FROM [dbo].[tin_nhan];
 SET IDENTITY_INSERT [dbo].[tin_nhan] ON;
 INSERT INTO [dbo].[tin_nhan] ([id], [da_doc], [noi_dung], [sender_name], [sender_role], [session_guest_id], [thoi_gian], [khach_hang_id]) VALUES (1, 1, N'Shop tư vấn giúp mình cách đo size mũ bảo hiểm với', N'Khách vãng lai', N'CUSTOMER', N'guest_test_999', '2026-09-13 01:49:30.126', NULL);
 INSERT INTO [dbo].[tin_nhan] ([id], [da_doc], [noi_dung], [sender_name], [sender_role], [session_guest_id], [thoi_gian], [khach_hang_id]) VALUES (2, 1, N'📏 **Hướng dẫn chọn size mũ bảo hiểm chuẩn xác**:
