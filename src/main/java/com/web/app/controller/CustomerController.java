@@ -166,6 +166,17 @@ public class CustomerController {
             return "redirect:/login?error=login-required&redirect=/cart";
         }
         try {
+            // If user didn't specify variant, but product has variants, pick first in-stock variant
+            if (variantId == null) {
+                List<BienTheSanPham> vars = bienTheSanPhamRepository.findBySanPhamIdOrderByMauSacAscKichCoAsc(productId);
+                if (!vars.isEmpty()) {
+                    variantId = vars.stream()
+                            .filter(v -> v.getSoLuong() > 0)
+                            .map(BienTheSanPham::getId)
+                            .findFirst()
+                            .orElse(vars.get(0).getId());
+                }
+            }
             gioHangService.addToCart(kh.getId(), productId, variantId, quantity);
             redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm vào giỏ hàng thành công!");
         } catch (IllegalArgumentException e) {
@@ -194,7 +205,8 @@ public class CustomerController {
 
     @PostMapping("/api/cart/update")
     @ResponseBody
-    public ResponseEntity<?> updateCartAjax(@RequestParam("productId") Integer productId,
+    public ResponseEntity<?> updateCartAjax(@RequestParam(value = "productId", required = false) Integer productId,
+                                            @RequestParam(value = "itemId", required = false) Integer itemId,
                                             @RequestParam("quantity") int quantity,
                                             HttpSession session) {
         KhachHang kh = getSessionCustomer(session);
@@ -205,7 +217,8 @@ public class CustomerController {
             return ResponseEntity.status(401).body(err);
         }
         try {
-            gioHangService.updateCartItemQuantityById(kh.getId(), productId, quantity);
+            Integer targetId = (itemId != null) ? itemId : productId;
+            gioHangService.updateCartItemQuantityById(kh.getId(), targetId, quantity);
             
             List<ChiTietGioHang> items = gioHangService.getCartDetails(kh.getId());
             double tongTien = items.stream()
@@ -216,7 +229,7 @@ public class CustomerController {
                     .sum();
             
             double itemSubtotal = items.stream()
-                    .filter(item -> item.getId().equals(productId))
+                    .filter(item -> item.getId().equals(targetId))
                     .mapToDouble(item -> item.getDonGia() * item.getSoLuong())
                     .findFirst()
                     .orElse(0.0);
@@ -238,7 +251,8 @@ public class CustomerController {
 
     @PostMapping("/api/cart/remove")
     @ResponseBody
-    public ResponseEntity<?> removeCartItemAjax(@RequestParam("productId") Integer productId,
+    public ResponseEntity<?> removeCartItemAjax(@RequestParam(value = "productId", required = false) Integer productId,
+                                                @RequestParam(value = "itemId", required = false) Integer itemId,
                                                 HttpSession session) {
         KhachHang kh = getSessionCustomer(session);
         if (kh == null) {
@@ -248,7 +262,10 @@ public class CustomerController {
             return ResponseEntity.status(401).body(err);
         }
         try {
-            gioHangService.removeCartItemById(kh.getId(), productId);
+            Integer targetId = (itemId != null) ? itemId : productId;
+            if (targetId != null) {
+                gioHangService.removeCartItemById(kh.getId(), targetId);
+            }
             
             List<ChiTietGioHang> items = gioHangService.getCartDetails(kh.getId());
             double tongTien = items.stream()
@@ -270,6 +287,31 @@ public class CustomerController {
             err.put("message", e.getMessage());
             return ResponseEntity.ok(err);
         }
+    }
+
+    public ResponseEntity<?> removeCartItemAjax(Integer productId, HttpSession session) {
+        return removeCartItemAjax(productId, null, session);
+    }
+
+    @PostMapping("/cart/remove")
+    public String removeCartItemPost(@RequestParam(value = "itemId", required = false) Integer itemId,
+                                     @RequestParam(value = "productId", required = false) Integer productId,
+                                     HttpSession session,
+                                     RedirectAttributes redirectAttributes) {
+        KhachHang kh = getSessionCustomer(session);
+        if (kh == null) {
+            return "redirect:/login?error=login-required&redirect=/cart";
+        }
+        Integer targetId = (itemId != null) ? itemId : productId;
+        if (targetId != null) {
+            try {
+                gioHangService.removeCartItemById(kh.getId(), targetId);
+                redirectAttributes.addFlashAttribute("successMessage", "Đã xóa sản phẩm khỏi giỏ hàng.");
+            } catch (Exception e) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi xóa sản phẩm: " + e.getMessage());
+            }
+        }
+        return "redirect:/cart";
     }
 
     @GetMapping("/cart/remove/{itemId}")

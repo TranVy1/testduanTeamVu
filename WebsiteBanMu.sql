@@ -1,7 +1,7 @@
 ﻿-- ==========================================================
 -- DATABASE BACKUP / RESTORE SCRIPT: WebsiteBanMu
 -- Há»‡ Thá»‘ng Website BÃ¡n MÅ© Thá»i Trang HATS.VN
--- NgÃ y táº¡o: 2026-09-13 11:11:35
+-- NgÃ y táº¡o: 2026-09-13 17:02:26
 -- ==========================================================
 
 USE master;
@@ -386,19 +386,31 @@ GO
 
 -- Data for table: san_pham (5 rows)
 SET IDENTITY_INSERT [dbo].[san_pham] ON;
-INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (1, N'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600', 350000, N'Mo ta', '2026-09-12 23:07:15.238', 111, N'Mũ Lưỡi Trai Nike Heritage86', 1, 1);
-INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (2, N'https://images.unsplash.com/photo-1534215754734-18e55d13e346?w=600', 380000, N'Thiết kế siêu nhẹ dành cho các hoạt động thể thao ngoài trời như chạy bộ, tennis. Công nghệ chống tia UV bảo vệ da đầu.', '2026-09-12 23:07:15.274', 24, N'Mũ Lưỡi Trai Adidas Superlite', 1, 2);
-INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (3, N'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=600', 490000, N'Mũ Snapback NY huyền thoại từ thương hiệu New Era. Phía sau có khấc nhựa điều chỉnh kích thước dễ dàng, phong cách hiphop cực chất.', '2026-09-12 23:07:15.276', 20, N'Mũ Snapback New Era 9FIFTY NY', 2, 4);
-INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (4, N'https://images.unsplash.com/photo-1529958030586-3aae4ca485ff?w=600', 450000, N'Mũ tai bèo (bucket) in họa tiết logo Boston cá tính. Vải kaki dày dặn giữ form tốt, thích hợp cho cả nam và nữ.', '2026-09-12 23:07:15.278', 24, N'Mũ Bucket MLB Boston Red Sox', 3, 3);
-INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (5, N'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=600', 420000, N'Mũ MLB thêu chữ LA nổi bật màu xanh dương thanh lịch. Chất liệu cao cấp, đường chỉ thêu tỉ mỉ chuẩn auth.', '2026-09-12 23:07:15.281', 9, N'Mũ Lưỡi Trai MLB LA Dodgers', 2, 3);
+INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (1, N'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600', 350000, N'Mo ta', '2026-09-12 23:07:15.238', 136, N'Mũ Lưỡi Trai Nike Heritage86', 1, 1);
+INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (2, N'https://images.unsplash.com/photo-1534215754734-18e55d13e346?w=600', 380000, N'Thiết kế siêu nhẹ dành cho các hoạt động thể thao ngoài trời như chạy bộ, tennis. Công nghệ chống tia UV bảo vệ da đầu.', '2026-09-12 23:07:15.274', 37, N'Mũ Lưỡi Trai Adidas Superlite', 1, 2);
+INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (3, N'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=600', 490000, N'Mũ Snapback NY huyền thoại từ thương hiệu New Era. Phía sau có khấc nhựa điều chỉnh kích thước dễ dàng, phong cách hiphop cực chất.', '2026-09-12 23:07:15.276', 30, N'Mũ Snapback New Era 9FIFTY NY', 2, 4);
+INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (4, N'https://images.unsplash.com/photo-1529958030586-3aae4ca485ff?w=600', 450000, N'Mũ tai bèo (bucket) in họa tiết logo Boston cá tính. Vải kaki dày dặn giữ form tốt, thích hợp cho cả nam và nữ.', '2026-09-12 23:07:15.278', 37, N'Mũ Bucket MLB Boston Red Sox', 3, 3);
+INSERT INTO [dbo].[san_pham] ([id], [anh_url], [gia], [mo_ta], [ngay_tao], [so_luong], [ten_san_pham], [danh_muc_id], [thuong_hieu_id]) VALUES (5, N'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=600', 420000, N'Mũ MLB thêu chữ LA nổi bật màu xanh dương thanh lịch. Chất liệu cao cấp, đường chỉ thêu tỉ mỉ chuẩn auth.', '2026-09-12 23:07:15.281', 31, N'Mũ Lưỡi Trai MLB LA Dodgers', 2, 3);
 SET IDENTITY_INSERT [dbo].[san_pham] OFF;
 GO
 
--- Data for table: bien_the_san_pham (3 rows)
+-- Data for table: bien_the_san_pham (15 rows)
 SET IDENTITY_INSERT [dbo].[bien_the_san_pham] ON;
-INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (1, 233232, N'm', N'đen', N'dsadáds', 9, 5);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (1, 233232, N'M', N'Đen', N'MLB-LAD-M', 9, 5);
 INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (2, 350000, N'M', N'Đen', N'NIKE-BLK-M', 98, 1);
 INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (3, 360000, N'L', N'Trắng', N'NIKE-WHT-L', 13, 1);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (5, 370000, N'XL', N'Xanh Navy', N'NIKE-NVY-XL', 25, 1);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (6, 380000, N'M', N'Đen', N'ADS-BLK-M', 15, 2);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (7, 380000, N'L', N'Trắng', N'ADS-WHT-L', 12, 2);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (8, 390000, N'XL', N'Xám', N'ADS-GRY-XL', 10, 2);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (9, 490000, N'M', N'Đen Phối Trắng', N'NE-BLK-M', 10, 3);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (10, 490000, N'L', N'Đen Phối Đỏ', N'NE-RED-L', 12, 3);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (11, 510000, N'XL', N'Xanh Navy', N'NE-NVY-XL', 8, 3);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (12, 450000, N'M', N'Be (Cream)', N'MLB-BOS-BE-M', 12, 4);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (13, 450000, N'L', N'Đen', N'MLB-BOS-BLK-L', 15, 4);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (14, 450000, N'FreeSize', N'Nâu', N'MLB-BOS-BRN-FS', 10, 4);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (15, 420000, N'L', N'Đen', N'MLB-LAD-BLK-L', 12, 5);
+INSERT INTO [dbo].[bien_the_san_pham] ([id], [gia], [kich_co], [mau_sac], [sku], [so_luong], [san_pham_id]) VALUES (16, 420000, N'M', N'Xanh Dương', N'MLB-LAD-BLU-M', 10, 5);
 SET IDENTITY_INSERT [dbo].[bien_the_san_pham] OFF;
 GO
 

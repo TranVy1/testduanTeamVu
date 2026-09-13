@@ -45,8 +45,21 @@
                                              class="rounded-3 me-3" alt="Product Image" onerror="this.onerror=null;this.src='/images/hat-placeholder.svg'" style="width: 60px; height: 60px; object-fit: cover;">
                                         <div>
                                             <a th:href="@{/san-pham/{id}(id=${item.sanPham.id})}" class="fw-bold text-white text-decoration-none" th:text="${item.sanPham.tenSanPham}"></a>
-                                            <div th:if="${item.bienThe != null}" class="text-muted small" th:text="${item.bienThe.mauSac + ' / ' + item.bienThe.kichCo}"></div>
-                                            <div class="text-muted small" th:text="'Kho: ' + ${item.tonKho} + ' chiếc'"></div>
+                                            <div class="mt-1" th:if="${item.bienThe != null}">
+                                                <span class="badge" style="background: rgba(124,58,237,.18); color: #c4b5fd; border: 1px solid rgba(124,58,237,.35); font-size: 0.78rem;">
+                                                    <i class="fa-solid fa-ruler me-1"></i>Size: <strong th:text="${item.bienThe.kichCo}"></strong>
+                                                </span>
+                                                <span class="badge ms-1" style="background: #22222f; color: #cbd5e1; border: 1px solid #3c3c4f; font-size: 0.78rem;">
+                                                    <i class="fa-solid fa-palette me-1"></i>Màu: <span th:text="${item.bienThe.mauSac}"></span>
+                                                </span>
+                                                <div class="text-muted small mt-1" th:text="'Kho: ' + ${item.tonKho} + ' chiếc'"></div>
+                                            </div>
+                                            <div class="mt-1" th:if="${item.bienThe == null}">
+                                                <span class="badge" style="background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,.3); font-size: 0.78rem;">
+                                                    <i class="fa-solid fa-check me-1"></i>FreeSize (Tiêu chuẩn)
+                                                </span>
+                                                <div class="text-muted small mt-1" th:text="'Kho: ' + ${item.tonKho} + ' chiếc'"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -64,7 +77,11 @@
                                 </td>
                                 <td class="text-center fw-bold text-primary" th:id="'subtotal-' + ${item.id}" th:text="${#numbers.formatDecimal(item.donGia * item.soLuong, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></td>
                                 <td class="text-center">
-                                    <a href="javascript:void(0)" class="text-danger fs-5 btn-cart-remove" th:data-product-id="${item.id}">
+                                    <a th:href="@{/cart/remove/{id}(id=${item.id})}" 
+                                       class="text-danger fs-5 btn-cart-remove" 
+                                       th:data-item-id="${item.id}"
+                                       th:data-product-id="${item.id}"
+                                       title="Xóa khỏi giỏ hàng">
                                         <i class="fa-regular fa-trash-can"></i>
                                     </a>
                                 </td>
@@ -206,33 +223,21 @@
                 });
             });
 
-            // Remove button handler - use event delegation to handle clicks on child <i> elements
+            // Remove button handler - with SweetAlert2 and native confirm fallback
             document.querySelectorAll('.btn-cart-remove').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    // Use closest() to ensure we get the correct element with data-product-id
-                    const removeBtn = e.target.closest('.btn-cart-remove');
-                    if (!removeBtn) return;
-                    const productId = removeBtn.getAttribute('data-product-id');
-                    if (!productId) return;
+                    const removeBtn = this;
+                    const itemId = removeBtn.getAttribute('data-item-id') || removeBtn.getAttribute('data-product-id');
+                    const fallbackUrl = removeBtn.getAttribute('href');
+                    if (!itemId) return;
                     
-                    Swal.fire({
-                        title: 'Xóa khỏi giỏ hàng?',
-                        text: 'Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#dc3545',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Xóa ngay',
-                        cancelButtonText: 'Giữ lại',
-                        reverseButtons: true
-                    }).then((result) => {
-                        if (!result.isConfirmed) return;
+                    const performRemoval = function() {
                         const rowEl = removeBtn.closest('tr');
-                        
                         const formData = new URLSearchParams();
-                        formData.append('productId', productId);
+                        formData.append('productId', itemId);
+                        formData.append('itemId', itemId);
 
                         fetch('/api/cart/remove', {
                             method: 'POST',
@@ -255,12 +260,12 @@
                             if (data && data.success) {
                                 if (data.isEmpty) {
                                     showToast('Đã xóa sản phẩm. Giỏ hàng trống!', 'success');
-                                    setTimeout(() => location.reload(), 1000);
+                                    setTimeout(() => location.reload(), 600);
                                 } else {
                                     if (rowEl) {
-                                        rowEl.style.transition = 'opacity 0.3s ease';
+                                        rowEl.style.transition = 'opacity 0.25s ease';
                                         rowEl.style.opacity = '0';
-                                        setTimeout(() => rowEl.remove(), 300);
+                                        setTimeout(() => rowEl.remove(), 250);
                                     }
                                     
                                     const cartTotalEl = document.getElementById('cartTotal');
@@ -276,13 +281,43 @@
                                     showToast('Đã xóa sản phẩm khỏi giỏ hàng thành công!', 'success');
                                 }
                             } else {
-                                showToast((data && data.message) || 'Có lỗi xảy ra khi xóa sản phẩm!', 'error');
+                                if (fallbackUrl) {
+                                    window.location.href = fallbackUrl;
+                                } else {
+                                    showToast((data && data.message) || 'Có lỗi xảy ra khi xóa sản phẩm!', 'error');
+                                }
                             }
                         })
                         .catch(err => {
                             console.error(err);
-                            showToast('Không thể kết nối đến máy chủ!', 'error');
+                            if (fallbackUrl) {
+                                window.location.href = fallbackUrl;
+                            } else {
+                                showToast('Không thể kết nối đến máy chủ!', 'error');
+                            }
                         });
+                    };
+
+                    if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                        Swal.fire({
+                            title: 'Xóa khỏi giỏ hàng?',
+                            text: 'Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Xóa ngay',
+                            cancelButtonText: 'Giữ lại',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                performRemoval();
+                            }
+                        });
+                    } else {
+                        if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                            performRemoval();
+                        }
                     }
                 });
             });

@@ -89,9 +89,9 @@ Hệ thống đã chuẩn bị sẵn tài khoản quản trị và khách hàng 
 
 | Vai trò | Tên đăng nhập | Mật khẩu | Đường dẫn truy cập | Quyền hạn chính |
 | :--- | :--- | :--- | :--- | :--- |
-| **Quản trị viên (Admin)** | `admin` | `123456` | `http://localhost:8085/login` | Toàn quyền quản trị Dashboard, Sản phẩm, Biến thể, Danh mục, Thương hiệu, Voucher, Đơn hàng, Live Chat Admin |
-| **Khách hàng 1 (User)** | `user` | `123456` | `http://localhost:8085/login` | Mua hàng, Giỏ hàng, Đặt hàng VietQR/VNPAY/COD, Lịch sử đơn hàng, Đánh giá sản phẩm đã mua |
-| **Khách hàng 2 (User)** | `user2` | `123456` | `http://localhost:8085/login` | Mua hàng, Chat trực tiếp với Shop qua widget |
+| **Quản trị viên (Admin)** | `admin` | `admin123` | `http://localhost:8085/login` | Toàn quyền quản trị Dashboard, Sản phẩm, Biến thể, Danh mục, Thương hiệu, Voucher, Đơn hàng, Live Chat Admin |
+| **Khách hàng 1 (User)** | `user` | `user123` | `http://localhost:8085/login` | Mua hàng, Giỏ hàng, Đặt hàng VietQR/VNPAY/COD, Lịch sử đơn hàng, Đánh giá sản phẩm đã mua |
+| **Khách hàng 2 (User)** | `user2` | `user123` | `http://localhost:8085/login` | Mua hàng, Chat trực tiếp với Shop qua widget |
 
 ---
 
@@ -100,8 +100,15 @@ Hệ thống đã chuẩn bị sẵn tài khoản quản trị và khách hàng 
 ### 🛍️ Phía Khách Hàng (Storefront - User)
 1. **Giao diện hiện đại Midnight Dark Theme**: Tông màu tối bảo vệ mắt, thiết kế cao cấp, đồng bộ trên toàn bộ các trang.
 2. **Bộ lọc sản phẩm thông minh**: Lọc tức thì theo danh mục, thương hiệu, khoảng giá, màu sắc và trạng thái còn hàng.
-3. **Chi tiết sản phẩm & biến thể**: Xem hình ảnh, màu sắc/kích cỡ, tồn kho thời gian thực.
-4. **Đánh giá & Nhận xét (Verified Buyer Review)**:
+3. **Chi tiết sản phẩm & Kích cỡ (Size Selector)**:
+   - Bộ chọn Size & Màu sắc tương tác trực quan dạng nút bấm (chips) (Size M, L, XL, FreeSize).
+   - Tự động đồng bộ giá bán, số lượng tồn kho theo thời gian thực khi chọn size.
+   - Hiển thị badge FreeSize tiêu chuẩn có khóa điều chỉnh ôm đầu cho mũ đơn size.
+4. **Quản lý Giỏ hàng & Xóa sản phẩm chuẩn xác**:
+   - Thêm sản phẩm cùng các biến thể kích cỡ vào giỏ hàng.
+   - Hiển thị chi tiết Kích cỡ (Size) và Màu sắc của từng món trong giỏ hàng.
+   - Nút xóa sản phẩm hỗ trợ xóa tức thì qua AJAX với SweetAlert2 và tự động fallback an toàn qua link trực tiếp.
+5. **Đánh giá & Nhận xét (Verified Buyer Review)**:
    - Khách hàng đã mua sản phẩm có thể chấm sao (1 - 5 sao) và nhận xét chi tiết.
    - Hiển thị sao trung bình, tổng lượt đánh giá, huy hiệu "Đã mua hàng".
 5. **Thanh toán đa cổng (Fintech Gateway)**:

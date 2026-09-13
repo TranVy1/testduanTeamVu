@@ -16,11 +16,68 @@
       </div>
       <p class="detail-price" id="variantPrice" th:text="${#numbers.formatDecimal(product.gia,0,'COMMA',0,'POINT')} + ' ₫'">0 ₫</p>
       <div class="detail-description"><h2>Mô tả sản phẩm</h2><p th:text="${product.moTa != null && !product.moTa.isBlank() ? product.moTa : 'Sản phẩm mũ thời trang được tuyển chọn bởi HATS.VN.'}"></p></div>
+      <style>
+        .variant-selector-wrap { margin-bottom: 20px; }
+        .variant-pills-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .variant-pill-btn { display: inline-flex; flex-direction: column; align-items: flex-start; padding: 10px 16px; background: #111119; border: 1.5px solid #363644; border-radius: 12px; color: #ededf3; cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); text-align: left; min-width: 125px; user-select: none; }
+        .variant-pill-btn:hover:not(.disabled) { border-color: #8b5cf6; background: rgba(124,58,237,.08); transform: translateY(-2px); }
+        .variant-pill-btn.active { border-color: #8b5cf6; background: rgba(124,58,237,.2); box-shadow: 0 0 0 3px rgba(139,92,246,.3), 0 8px 16px rgba(124,58,237,.15); }
+        .variant-pill-btn.active .pill-size { color: #c4b5fd; }
+        .variant-pill-btn.disabled { opacity: .45; cursor: not-allowed; border-color: #272733; background: #14141c; pointer-events: none; }
+        .pill-size { font-weight: 750; font-size: .95rem; color: #f8fafc; display: flex; align-items: center; gap: 6px; }
+        .pill-color { font-size: .8rem; color: #a1a1aa; margin-top: 3px; }
+        .pill-stock { font-size: .72rem; margin-top: 4px; }
+        .freesize-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 12px; background: #111119; border: 1.5px solid #363644; color: #c4b5fd; font-weight: 600; font-size: .88rem; }
+      </style>
       <form th:action="@{/cart/add}" method="post" class="detail-buy-form" th:if="${!#lists.isEmpty(variants) or product.soLuong > 0}">
         <input type="hidden" name="productId" th:value="${product.id}">
-        <label class="detail-label" for="variantId" th:if="${!#lists.isEmpty(variants)}">Màu sắc / kích cỡ <b>*</b></label>
-        <select class="detail-select" name="variantId" id="variantId" required th:if="${!#lists.isEmpty(variants)}"><option value="">Chọn biến thể phù hợp</option><option th:each="v : ${variants}" th:value="${v.id}" th:data-price="${v.gia}" th:data-stock="${v.soLuong}" th:disabled="${v.soLuong <= 0}" th:text="${v.mauSac + ' / ' + v.kichCo + ' — ' + #numbers.formatDecimal(v.gia,0,'COMMA',0,'POINT') + ' ₫ (' + v.soLuong + ' còn lại)'}"></option></select>
-        <div class="detail-stock-row"><span><i class="fa-solid fa-box"></i> Tồn kho</span><strong id="stockLabel" th:text="${#lists.isEmpty(variants) ? product.soLuong + ' sản phẩm' : 'Chọn biến thể'}">0 sản phẩm</strong></div>
+        
+        <!-- Interactive Size & Variant Selector -->
+        <div class="variant-selector-wrap" th:if="${!#lists.isEmpty(variants)}">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="detail-label mb-0"><i class="fa-solid fa-ruler-combined me-1 text-primary"></i>Chọn kích cỡ & màu sắc: <b>*</b></label>
+            <span class="small" id="selectedVariantNotice" style="color: #c4b5fd; font-weight: 600;"></span>
+          </div>
+          <div class="variant-pills-list" id="variantPills">
+            <button type="button" 
+                    th:each="v : ${variants}" 
+                    class="variant-pill-btn" 
+                    th:classappend="${v.soLuong <= 0 ? 'disabled' : ''}"
+                    th:data-id="${v.id}" 
+                    th:data-size="${v.kichCo}" 
+                    th:data-color="${v.mauSac}" 
+                    th:data-price="${v.gia}" 
+                    th:data-stock="${v.soLuong}"
+                    th:disabled="${v.soLuong <= 0}"
+                    th:title="${v.soLuong <= 0 ? 'Hết hàng' : 'Chọn size ' + v.kichCo}">
+              <span class="pill-size">
+                <i class="fa-solid fa-tag text-primary fs-6"></i>
+                <span th:text="'Size ' + ${v.kichCo}">Size M</span>
+              </span>
+              <span class="pill-color" th:text="${v.mauSac}">Đen</span>
+              <span class="pill-stock" th:if="${v.soLuong > 0}" style="color: #6ee7b7;">
+                <i class="fa-solid fa-check me-1"></i>Còn <span th:text="${v.soLuong}"></span>
+              </span>
+              <span class="pill-stock text-danger" th:if="${v.soLuong <= 0}">
+                <i class="fa-solid fa-ban me-1"></i>Hết hàng
+              </span>
+            </button>
+          </div>
+          <input type="hidden" name="variantId" id="variantId">
+        </div>
+
+        <!-- FreeSize indicator when no variants are configured -->
+        <div class="variant-selector-wrap" th:if="${#lists.isEmpty(variants)}">
+          <label class="detail-label mb-2"><i class="fa-solid fa-ruler-combined me-1 text-primary"></i>Kích cỡ:</label>
+          <div>
+            <div class="freesize-badge">
+              <i class="fa-solid fa-circle-check text-success"></i>
+              <span>FreeSize (Tiêu chuẩn - Có khóa điều chỉnh ôm đầu)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-stock-row"><span><i class="fa-solid fa-box"></i> Tồn kho</span><strong id="stockLabel" th:text="${#lists.isEmpty(variants) ? product.soLuong + ' sản phẩm' : 'Chọn kích cỡ'}">0 sản phẩm</strong></div>
         <div class="detail-purchase-row"><div class="detail-quantity"><button type="button" id="decreaseQuantity" aria-label="Giảm số lượng"><i class="fa-solid fa-minus"></i></button><input type="number" id="quantity" name="quantity" value="1" min="1" th:max="${product.soLuong}" required aria-label="Số lượng"><button type="button" id="increaseQuantity" aria-label="Tăng số lượng"><i class="fa-solid fa-plus"></i></button></div><button class="detail-buy-btn" type="submit"><i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ</button></div>
       </form>
       <div class="detail-sold-out" th:if="${#lists.isEmpty(variants) and product.soLuong <= 0}"><i class="fa-solid fa-circle-xmark"></i> Sản phẩm hiện đã hết hàng</div>
@@ -126,11 +183,83 @@
 <div th:replace="~{fragments/footer :: footer}"></div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const select = document.getElementById('variantId'), quantity = document.getElementById('quantity'), price = document.getElementById('variantPrice'), stock = document.getElementById('stockLabel');
+  const hiddenVariantInput = document.getElementById('variantId');
+  const quantity = document.getElementById('quantity');
+  const price = document.getElementById('variantPrice');
+  const stock = document.getElementById('stockLabel');
+  const notice = document.getElementById('selectedVariantNotice');
+  const pills = document.querySelectorAll('.variant-pill-btn:not(.disabled)');
+  const allPills = document.querySelectorAll('.variant-pill-btn');
   const format = value => new Intl.NumberFormat('vi-VN').format(value) + ' ₫';
-  select?.addEventListener('change', function () { const option = this.options[this.selectedIndex], available = Number(option.dataset.stock || 0), unitPrice = Number(option.dataset.price || 0); quantity.max = Math.max(available, 1); quantity.value = 1; stock.textContent = available ? available + ' sản phẩm' : 'Biến thể này đã hết hàng'; price.textContent = format(unitPrice); });
-  document.getElementById('decreaseQuantity')?.addEventListener('click', () => { quantity.value = Math.max(1, Number(quantity.value || 1) - 1); });
-  document.getElementById('increaseQuantity')?.addEventListener('click', () => { const max = Number(quantity.max || 1); quantity.value = Math.min(max, Number(quantity.value || 1) + 1); });
+
+  function selectPill(pill) {
+    if (!pill) return;
+    allPills.forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+
+    const vId = pill.dataset.id;
+    const vSize = pill.dataset.size;
+    const vColor = pill.dataset.color;
+    const vPrice = Number(pill.dataset.price || 0);
+    const vStock = Number(pill.dataset.stock || 0);
+
+    if (hiddenVariantInput) {
+      hiddenVariantInput.value = vId;
+    }
+    if (quantity) {
+      quantity.max = Math.max(vStock, 1);
+      quantity.value = 1;
+    }
+    if (stock) {
+      stock.textContent = vStock > 0 ? (vStock + ' sản phẩm có sẵn') : 'Biến thể này đã hết hàng';
+    }
+    if (price && vPrice > 0) {
+      price.textContent = format(vPrice);
+    }
+    if (notice) {
+      notice.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i>Đang chọn: Size ' + vSize + ' (' + vColor + ')';
+    }
+  }
+
+  pills.forEach(pill => {
+    pill.addEventListener('click', function () {
+      selectPill(this);
+    });
+  });
+
+  // Auto-select first in-stock variant on load
+  if (pills.length > 0) {
+    selectPill(pills[0]);
+  }
+
+  // Prevent add to cart if variants exist but none selected
+  const form = document.querySelector('.detail-buy-form');
+  form?.addEventListener('submit', function (e) {
+    if (allPills.length > 0 && (!hiddenVariantInput || !hiddenVariantInput.value)) {
+      e.preventDefault();
+      if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Chọn kích cỡ',
+          text: 'Vui lòng chọn kích cỡ mũ trước khi thêm vào giỏ hàng!',
+          background: '#17171f',
+          color: '#ededf3'
+        });
+      } else {
+        alert('Vui lòng chọn kích cỡ mũ trước khi thêm vào giỏ hàng!');
+      }
+    }
+  });
+
+  document.getElementById('decreaseQuantity')?.addEventListener('click', () => { 
+    if (quantity) quantity.value = Math.max(1, Number(quantity.value || 1) - 1); 
+  });
+  document.getElementById('increaseQuantity')?.addEventListener('click', () => { 
+    if (quantity) {
+      const max = Number(quantity.max || 1); 
+      quantity.value = Math.min(max, Number(quantity.value || 1) + 1); 
+    }
+  });
 });
 </script>
 </body></html>

@@ -32,29 +32,33 @@ class AppApplicationTests {
 	@Autowired
 	private CustomerController customerController;
 
+	@Autowired
+	private com.web.app.repository.SanPhamRepository sanPhamRepository;
+
 	@Test
 	void testCartItemDeletion() {
-		// Ensure product 6 is in the cart
-		gioHangService.addToCart(1, 6, 3);
+		Integer testPid = sanPhamRepository.findAll().get(0).getId();
+		// Ensure product is in the cart
+		gioHangService.addToCart(1, testPid, 1);
 
-		// 1. Verify product 6 is initially in customer 1's cart
+		// 1. Verify product is initially in customer 1's cart
 		var cartDetailsBefore = gioHangService.getCartDetails(1);
 		assertFalse(cartDetailsBefore.isEmpty(), "Cart should not be empty initially");
-		boolean hasProduct6 = cartDetailsBefore.stream()
-				.anyMatch(item -> item.getSanPham().getId().equals(6));
-		assertTrue(hasProduct6, "Cart should contain product 6");
+		boolean hasProduct = cartDetailsBefore.stream()
+				.anyMatch(item -> item.getSanPham().getId().equals(testPid));
+		assertTrue(hasProduct, "Cart should contain test product");
 
 		// 2. Perform deletion
-		gioHangService.removeCartItem(1, 6);
+		gioHangService.removeCartItem(1, testPid);
 
-		// 3. Verify product 6 is no longer in the cart
+		// 3. Verify product is no longer in the cart
 		var cartDetailsAfter = gioHangService.getCartDetails(1);
-		boolean stillHasProduct6 = cartDetailsAfter.stream()
-				.anyMatch(item -> item.getSanPham().getId().equals(6));
-		assertFalse(stillHasProduct6, "Cart should not contain product 6 after deletion");
+		boolean stillHasProduct = cartDetailsAfter.stream()
+				.anyMatch(item -> item.getSanPham().getId().equals(testPid));
+		assertFalse(stillHasProduct, "Cart should not contain test product after deletion");
 
-		// 4. Restore the item back to the cart for manual verification
-		gioHangService.addToCart(1, 6, 3);
+		// 4. Restore the item back to the cart for verification
+		gioHangService.addToCart(1, testPid, 1);
 		
 		var cartDetailsRestored = gioHangService.getCartDetails(1);
 		assertFalse(cartDetailsRestored.isEmpty(), "Cart should have the item restored");
@@ -71,7 +75,8 @@ class AppApplicationTests {
 
 		if (pendingOrder == null) {
 			// Create a dummy order
-			gioHangService.addToCart(1, 6, 1);
+			Integer testPid = sanPhamRepository.findAll().get(0).getId();
+			gioHangService.addToCart(1, testPid, 1);
 			pendingOrder = donHangService.createOrder(1, "Test Recipient", "0987654321", "Test Address", "Test Ghi chu");
 		}
 
@@ -102,10 +107,11 @@ class AppApplicationTests {
 		MockHttpSession session = new MockHttpSession();
 		session.setAttribute("user", kh);
 
-		// Make sure product 6 is in cart
-		gioHangService.addToCart(1, 6, 1);
+		Integer testPid = sanPhamRepository.findAll().get(0).getId();
+		// Make sure product is in cart
+		gioHangService.addToCart(1, testPid, 1);
 
-		var response = customerController.removeCartItemAjax(6, session);
+		var response = customerController.removeCartItemAjax(testPid, session);
 		assertEquals(200, response.getStatusCode().value());
 	}
 
@@ -123,7 +129,8 @@ class AppApplicationTests {
 				.orElse(null);
 
 		if (pendingOrder == null) {
-			gioHangService.addToCart(1, 6, 1);
+			Integer testPid = sanPhamRepository.findAll().get(0).getId();
+			gioHangService.addToCart(1, testPid, 1);
 			pendingOrder = donHangService.createOrder(1, "Test Recipient", "0987654321", "Test Address", "Test Ghi chu");
 		}
 

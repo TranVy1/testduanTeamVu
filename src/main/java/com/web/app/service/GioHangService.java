@@ -47,7 +47,7 @@ public class GioHangService {
         int stock = variant == null ? product.getSoLuong() : variant.getSoLuong();
         if (stock < quantity) throw new IllegalArgumentException("Số lượng trong kho không đủ!");
         Optional<ChiTietGioHang> existing = variant == null
-                ? chiTietGioHangRepository.findByGioHangIdAndSanPhamId(cart.getId(), productId)
+                ? chiTietGioHangRepository.findByGioHangIdAndSanPhamIdAndBienTheIsNull(cart.getId(), productId)
                 : chiTietGioHangRepository.findByGioHangIdAndBienTheId(cart.getId(), variantId);
         if (existing.isPresent()) {
             ChiTietGioHang item = existing.get();
@@ -61,6 +61,7 @@ public class GioHangService {
     @Transactional
     public void updateCartItemQuantityById(Integer customerId, Integer itemId, int quantity) {
         ChiTietGioHang item = getOwnedItem(customerId, itemId);
+        if (item == null) return;
         if (quantity <= 0) { chiTietGioHangRepository.delete(item); realtimeService.publishForCustomer("CART", customerId); return; }
         if (item.getTonKho() < quantity) throw new IllegalArgumentException("Số lượng trong kho không đủ!");
         item.setSoLuong(quantity); chiTietGioHangRepository.save(item); realtimeService.publishForCustomer("CART", customerId);
@@ -69,25 +70,63 @@ public class GioHangService {
     @Transactional
     public void updateCartItemQuantity(Integer customerId, Integer productId, int quantity) {
         GioHang cart = getOrCreateGioHang(customerId);
-        ChiTietGioHang item = chiTietGioHangRepository.findByGioHangIdAndSanPhamId(cart.getId(), productId)
-                .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không có trong giỏ hàng!"));
+        Optional<ChiTietGioHang> itemOpt = chiTietGioHangRepository.findByGioHangIdAndSanPhamIdAndBienTheIsNull(cart.getId(), productId);
+        if (itemOpt.isEmpty()) {
+            itemOpt = chiTietGioHangRepository.findById(productId);
+        }
+        ChiTietGioHang item = itemOpt.orElseThrow(() -> new IllegalArgumentException("Sản phẩm không có trong giỏ hàng!"));
         updateCartItemQuantityById(customerId, item.getId(), quantity);
     }
 
     @Transactional
-    public void removeCartItemById(Integer customerId, Integer itemId) { chiTietGioHangRepository.delete(getOwnedItem(customerId, itemId)); realtimeService.publishForCustomer("CART", customerId); }
+    public void removeCartItemById(Integer customerId, Integer itemId) {
+        ChiTietGioHang item = getOwnedItem(customerId, itemId);
+        if (item != null) {
+            chiTietGioHangRepository.delete(item);
+            realtimeService.publishForCustomer("CART", customerId);
+        }
+    }
 
     @Transactional
     public void removeCartItem(Integer customerId, Integer productId) {
-        gioHangRepository.findByKhachHangId(customerId).flatMap(cart ->
-                chiTietGioHangRepository.findByGioHangIdAndSanPhamId(cart.getId(), productId))
-                .ifPresent(item -> { chiTietGioHangRepository.delete(item); realtimeService.publishForCustomer("CART", customerId); });
+        gioHangRepository.findByKhachHangId(customerId).ifPresent(cart -> {
+            List<ChiTietGioHang> list = chiTietGioHangRepository.findByGioHangId(cart.getId());
+            boolean modified = false;
+            for (ChiTietGioHang it : list) {
+                if ((it.getSanPham() != null && it.getSanPham().getId().equals(productId)) ||
+                    (it.getBienThe() != null && it.getBienThe().getId().equals(productId)) ||
+                    it.getId().equals(productId)) {
+                    chiTietGioHangRepository.delete(it);
+                    modified = true;
+                }
+            }
+            if (modified) {
+                realtimeService.publishForCustomer("CART", customerId);
+            }
+        });
     }
 
     private ChiTietGioHang getOwnedItem(Integer customerId, Integer itemId) {
-        ChiTietGioHang item = chiTietGioHangRepository.findById(itemId).orElseThrow(() -> new IllegalArgumentException("Sản phẩm không có trong giỏ hàng!"));
-        if (!item.getGioHang().getKhachHang().getId().equals(customerId)) throw new IllegalArgumentException("Không có quyền thao tác giỏ hàng!");
-        return item;
+        Optional<ChiTietGioHang> itemOpt = chiTietGioHangRepository.findById(itemId);
+        if (itemOpt.isPresent()) {
+            ChiTietGioHang item = itemOpt.get();
+            if (!item.getGioHang().getKhachHang().getId().equals(customerId)) {
+                throw new IllegalArgumentException("Không có quyền thao tác giỏ hàng!");
+            }
+            return item;
+        }
+        // Fallback: If itemId passed was a product ID or variant ID in this customer's cart
+        Optional<GioHang> cartOpt = gioHangRepository.findByKhachHangId(customerId);
+        if (cartOpt.isPresent()) {
+            List<ChiTietGioHang> items = chiTietGioHangRepository.findByGioHangId(cartOpt.get().getId());
+            for (ChiTietGioHang it : items) {
+                if ((it.getSanPham() != null && it.getSanPham().getId().equals(itemId)) ||
+                    (it.getBienThe() != null && it.getBienThe().getId().equals(itemId))) {
+                    return it;
+                }
+            }
+        }
+        return null;
     }
 
     @Transactional
